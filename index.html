@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Session Dessin V5.0</title>
+    <title>Session Dessin V5.1</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
@@ -19,6 +19,7 @@
             --bg-container: #161b22;
             --text-main: #c9d1d9;
             --accent: #58a6ff; 
+            --accent-dim: rgba(88, 166, 255, 0.3);
             --overlay: rgba(0,0,0,0.7);
             --floating-timer: rgba(0,0,0,0.6);
         }
@@ -28,6 +29,7 @@
             --bg-container: #ffffff;
             --text-main: #24292f;
             --accent: #0366d6;
+            --accent-dim: rgba(3, 102, 214, 0.2);
             --overlay: rgba(255,255,255,0.85);
             --floating-timer: rgba(255,255,255,0.8);
         }
@@ -37,35 +39,30 @@
         
         .app-layout { 
             display: flex; flex-direction: column; height: 100%; 
-            /* Sur mobile, on permet le scroll si nécessaire dans la vue normale */
-            overflow-y: auto; 
+            overflow-y: hidden; /* Lock scroll globally */
         }
 
         /* --- DISPLAY AREA (L'IMAGE) --- */
         .display-area {
             position: relative;
-            background-color: #000; /* Toujours noir pour le contraste image */
+            background-color: #000;
             width: 100%;
-            height: 40vh; /* Par défaut : 40% de l'écran */
+            /* Sur mobile, on donne plus de place à l'image, le reste s'adapte */
+            height: 55vh; 
             flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
             transition: height 0.3s ease;
         }
 
-        /* MODE PLEIN ÉCRAN (Classe ajoutée via JS) */
-        body.fullscreen-active .display-area {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 50;
-        }
-        body.fullscreen-active .timer-area { display: none; } /* Cache les réglages */
+        /* MODE PLEIN ÉCRAN */
+        body.fullscreen-active .display-area { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; }
+        body.fullscreen-active .timer-area { display: none; }
 
-        /* Image et Container */
         #transform-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform-origin: center; will-change: transform; }
         #diapo-image { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; transition: filter 0.2s; }
         
-        /* --- FLOATING UI (HUD) --- */
-        
-        /* Minuteur Flottant (Visible seulement en Fullscreen) */
+        /* HUD FLOTTANT (Timer Plein écran) */
         #floating-hud {
             position: absolute; top: 20px; right: 20px;
             background-color: var(--floating-timer); backdrop-filter: blur(4px);
@@ -75,7 +72,7 @@
         }
         body.fullscreen-active #floating-hud { display: flex; }
 
-        /* Toolbar (Outils) */
+        /* Toolbar */
         #image-toolbar {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             background-color: var(--overlay); backdrop-filter: blur(8px);
@@ -88,41 +85,79 @@
         .tool-btn:active { transform: scale(0.9); }
         .tool-btn.active { color: #fff; background-color: var(--accent); }
         
-        /* Bouton "Expand" (Plein écran) */
         #btn-expand {
             position: absolute; top: 15px; left: 15px; z-index: 60;
             background-color: var(--overlay); border-radius: 50%; padding: 8px;
             color: var(--text-main); border: 1px solid rgba(128,128,128,0.3);
-            display: none; /* Visible seulement quand une image est là */
+            display: none; 
         }
 
-        /* --- TIMER AREA (Interface bas) --- */
+        /* --- CONTROLS AREA (Bas) --- */
         .timer-area {
-            flex: 1; padding: 20px; overflow-y: auto;
+            flex: 1; padding: 15px 20px; overflow-y: auto;
             background-color: var(--bg-body);
-            display: flex; flex-direction: column; justify-content: flex-start;
+            display: flex; flex-direction: column; 
         }
         
         .container {
             width: 100%; max-width: 500px; margin: 0 auto;
             background-color: var(--bg-container); border: 1px solid rgba(128,128,128,0.2);
-            border-radius: 16px; padding: 20px;
+            border-radius: 16px; padding: 15px;
+            display: flex; flex-direction: column; gap: 10px;
         }
 
-        /* --- ELEMENTS UI --- */
-        .big-timer { font-size: 3.5rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-        .btn-main {
-            background-color: var(--accent); color: white; width: 100%; padding: 15px;
-            border-radius: 12px; font-weight: bold; font-size: 1.1rem;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-            margin-top: 10px;
+        /* --- NEW GAUGE TIMER --- */
+        .gauge-container {
+            width: 100%; height: 16px; 
+            background-color: var(--bg-body);
+            border: 1px solid rgba(128,128,128,0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 5px;
         }
-        .btn-main:disabled { opacity: 0.5; background-color: #555; }
-        
+        .gauge-fill {
+            height: 100%;
+            background-color: var(--accent);
+            width: 100%;
+            transition: width 1s linear; /* Animation fluide seconde par seconde */
+        }
+        .small-timer-text {
+            font-size: 0.85rem; font-weight: bold; color: var(--text-main); opacity: 0.8; text-align: center; font-variant-numeric: tabular-nums;
+        }
+
+        /* --- BUTTONS ROW --- */
+        .btn-row { display: flex; gap: 10px; width: 100%; margin-top: 5px; }
+        .btn-main {
+            background-color: var(--accent); color: white; 
+            border-radius: 10px; font-weight: bold; font-size: 1rem;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            padding: 12px; transition: opacity 0.2s;
+        }
+        .btn-stop { background-color: #d32f2f; color: white; opacity: 0.9; }
+        .btn-main:disabled { opacity: 0.4; background-color: #555; }
+        .btn-main:active { transform: translateY(1px); }
+
+        /* Selectors */
         .select-ui {
             width: 100%; background-color: var(--bg-body); color: var(--text-main);
-            padding: 10px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.3);
-            margin-bottom: 10px; font-size: 1rem;
+            padding: 8px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.3);
+            font-size: 0.9rem;
+        }
+
+        /* COACH (Hidden on Mobile) */
+        #coach-box {
+            margin-top: 5px; padding: 8px; border-radius: 6px;
+            background-color: var(--accent-dim); color: var(--accent); 
+            text-align: center; border: 1px solid var(--accent);
+            display: none; /* JS will toggle, but CSS hides on mobile */
+        }
+        .coach-title { font-weight: 800; font-size: 0.65rem; opacity: 0.9; text-transform: uppercase; margin-bottom:2px;}
+        .coach-message { font-weight: 600; font-size: 0.85rem; line-height: 1.2; }
+
+        /* Media Query: Show coach only on larger screens */
+        @media (min-width: 768px) {
+            #coach-box.active { display: block; }
         }
 
         /* --- LOADER & OVERLAYS --- */
@@ -136,11 +171,11 @@
 
         .progress-bar { width: 60%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-top: 10px; }
         .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; }
-        
-        /* --- TOUCH ZONES (Invisible navigation) --- */
         .touch-zone { position: absolute; top: 0; height: 100%; width: 20%; z-index: 40; }
-        #zone-left { left: 0; }
-        #zone-right { right: 0; }
+        #zone-left { left: 0; } #zone-right { right: 0; }
+        .img-flipped { transform: scaleX(-1); }
+        .confetti-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; }
+        #finish-animation-container { position: absolute; top: 0; bottom: 0; left: 0; right: 0; pointer-events: none; z-index: 50; overflow: hidden; }
 
     </style>
 </head>
@@ -149,7 +184,6 @@
     <div class="app-layout">
         
         <div class="display-area" id="display-area">
-            
             <button id="btn-expand" onclick="toggleFullscreen()">
                 <svg id="icon-expand" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
                 <svg id="icon-compress" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
@@ -160,25 +194,26 @@
                 <span id="float-counter" style="font-size: 0.8rem; color: #ddd;">1 / 30</span>
             </div>
 
-            <div id="zone-left" class="touch-zone" title="Précédent / Pause"></div>
-            <div id="zone-right" class="touch-zone" title="Suivant"></div>
+            <div id="zone-left" class="touch-zone"></div>
+            <div id="zone-right" class="touch-zone"></div>
 
             <div id="transform-container">
                 <img id="diapo-image" src="" alt="">
             </div>
 
             <div id="image-toolbar">
-                <button class="tool-btn" id="btn-bw" title="Noir et Blanc"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></button>
-                <button class="tool-btn" id="btn-threshold" title="Seuil"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 2v20"/></svg></button>
-                <button class="tool-btn" id="btn-blur" title="Flou"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><line x1="2" y1="2" x2="22" y2="22"/></svg></button>
+                <button class="tool-btn" id="btn-bw"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></button>
+                <button class="tool-btn" id="btn-threshold"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 2v20"/></svg></button>
+                <button class="tool-btn" id="btn-blur"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><line x1="2" y1="2" x2="22" y2="22"/></svg></button>
                 <div style="width:1px; height:20px; background:#666;"></div>
-                <button class="tool-btn" id="btn-flip" title="Miroir"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"></path><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"></path><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"></path></svg></button>
-                <button class="tool-btn" id="btn-rotate" title="Rotation"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
+                <button class="tool-btn" id="btn-flip"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"></path><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"></path><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"></path></svg></button>
+                <button class="tool-btn" id="btn-rotate"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
             </div>
 
             <div id="diapo-placeholder">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#666; margin-bottom:10px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                <button id="btn-select-folder" class="btn-main" style="width:auto; padding: 10px 20px; font-size: 0.9rem;">Ouvrir Dossier</button>
+                <h3 style="color: var(--text-main); font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Références</h3>
+                <button id="btn-select-folder" class="btn-main" style="width:auto; padding: 8px 16px; font-size: 0.9rem;">Ouvrir Dossier</button>
                 <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
                 <p id="folder-status" style="margin-top:10px; color:var(--accent); font-size:0.8rem; font-weight:bold;"></p>
             </div>
@@ -188,56 +223,64 @@
                 <div class="progress-bar"><div id="progress-bar-fill" class="progress-fill"></div></div>
                 <p id="loader-text" style="font-size:0.8rem; margin-top:5px;">0/0</p>
             </div>
-
             <div id="transition-overlay">
-                <h2 class="transition-title" id="transition-text" style="font-size:2rem; font-family:'Kalam'; margin-bottom:10px;">...</h2>
+                <h2 class="transition-title" id="transition-text" style="font-size:1.5rem; font-family:'Kalam'; margin-bottom:10px;">...</h2>
                 <div style="font-size:3rem;">⏳</div>
             </div>
-            
-             <div id="diapo-error">
-                <h3>Image Introuvable</h3>
-            </div>
-
+             <div id="diapo-error"><h3>Image Introuvable</h3></div>
         </div>
 
         <div class="timer-area">
             <div class="container">
                 
-                <div class="flex justify-between items-center mb-4">
-                    <h1 style="font-family: 'Kalam'; font-size: 1.5rem; color: var(--text-main);">Session Dessin</h1>
+                <div class="flex justify-between items-center">
+                    <h1 style="font-family: 'Kalam'; font-size: 1.2rem; color: var(--text-main);">Session Dessin</h1>
                     <div class="flex gap-2">
-                        <button id="theme-toggle" class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
-                        <button id="mute-toggle" class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
+                        <button id="theme-toggle" class="icon-btn" style="width:30px; height:30px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
+                        <button id="mute-toggle" class="icon-btn" style="width:30px; height:30px;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 text-center mb-4">
+                <div class="flex justify-between items-end border-b pb-2" style="border-color: rgba(128,128,128,0.2);">
                     <div>
-                        <p style="font-size:0.8rem; opacity:0.7;">Pose</p>
-                        <p id="cycle-display" style="font-weight:bold; font-size:1.2rem; color:var(--accent);">01 / 30</p>
+                        <span style="font-size:0.75rem; opacity:0.7;">Pose </span>
+                        <span id="cycle-display" style="font-weight:bold; font-size:1rem; color:var(--accent);">01/30</span> 
                     </div>
                     <div>
-                        <p style="font-size:0.8rem; opacity:0.7;">Total</p>
-                        <p id="total-time-display" style="font-weight:bold; font-size:1.2rem;">30m</p>
+                        <span style="font-size:0.75rem; opacity:0.7;">Total </span>
+                        <span id="total-time-display" style="font-weight:bold; font-size:1rem;">30m</span> 
                     </div>
                 </div>
 
-                <div class="text-center mb-4">
-                    <p id="phase-display" style="font-size:0.9rem; font-weight:bold; color:var(--accent); margin-bottom:5px;">Prêt ?</p>
-                    <div style="background:var(--bg-body); padding:10px; border-radius:12px; display:inline-block; min-width:180px;">
-                        <span id="seconds-display" class="big-timer">00:00</span>
+                <div class="w-full">
+                    <div class="flex justify-between items-center mb-1">
+                        <p id="phase-display" style="font-size:0.8rem; font-weight:bold; color:var(--accent);">Prêt ?</p>
+                        <p id="small-timer" class="small-timer-text">00:00</p>
                     </div>
+                    <div class="gauge-container">
+                        <div id="gauge-bar" class="gauge-fill"></div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button id="main-action-button" class="btn-main" style="flex: 3;" disabled>
+                        <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span>LANCER</span>
+                    </button>
+                    <button id="stop-button" class="btn-main btn-stop" style="flex: 1;" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect></svg>
+                    </button>
                 </div>
 
                 <div id="coach-box">
-                    <div class="coach-title">💡 CONSEIL</div>
-                    <div id="coach-text" class="coach-message">Charge tes images pour commencer.</div>
+                    <div class="coach-title">CONSEIL</div>
+                    <div id="coach-text" class="coach-message">...</div>
                 </div>
 
-                <div class="flex gap-2 mt-4">
+                <div class="flex gap-2">
                     <select id="work-duration-selector" class="select-ui">
-                        <option value="CLASS_30">🎓 30 min (Cours)</option>
-                        <option value="CLASS_60">🎓 1h00 (Cours)</option>
+                        <option value="CLASS_30">🎓 30 min</option>
+                        <option value="CLASS_60">🎓 1h00</option>
                         <option disabled>--- Fixe ---</option>
                         <option value="30">30 sec</option>
                         <option value="60">1 min</option>
@@ -247,56 +290,47 @@
                     </select>
                     <select id="total-duration-selector" class="select-ui" disabled>
                         <option value="30">30 Poses</option>
-                        </select>
+                    </select>
                 </div>
-
-                <button id="main-action-button" class="btn-main" disabled>
-                    <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                    <span>COMMENCER</span>
-                </button>
-                 <button id="stop-button" class="btn-main" style="background-color:#444; margin-top:5px;" disabled>Arrêter</button>
 
             </div>
         </div>
 
     </div>
+    
+    <div id="finish-animation-container"></div>
 
     <script>
-        // --- PWA SETUP ---
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
-        // --- DATA & CONFIG ---
         const CLASS_30 = [ ...Array(22).fill(30), ...Array(7).fill(120), 300 ];
         const CLASS_60 = [ ...Array(22).fill(30), ...Array(22).fill(120), 300 ];
         
         let state = {
             running: false, paused: false, transitioning: false, muted: false, light: false, fullscreen: false,
-            cycle: 1, timeLeft: 0, totalLeft: 0, mode: 'CLASS_30', customTotal: 30,
+            cycle: 1, timeLeft: 0, currentMaxTime: 60, totalLeft: 0, mode: 'CLASS_30', customTotal: 30,
             structure: [], playlist: [], images: [],
             img: { scale:1, x:0, y:0, flip:false, bw:true, thresh:false, blur:false, rot:0 }
         };
         let timerId = null;
 
-        // --- DOM ELEMENTS ---
         const $ = (id) => document.getElementById(id);
         const els = {
-            body: document.body,
-            img: $('diapo-image'), container: $('transform-container'), 
-            display: $('display-area'), toolbar: $('image-toolbar'),
+            body: document.body, img: $('diapo-image'), container: $('transform-container'), display: $('display-area'), toolbar: $('image-toolbar'),
             btnExpand: $('btn-expand'), iconExpand: $('icon-expand'), iconCompress: $('icon-compress'),
-            timerMain: $('seconds-display'), timerFloat: $('float-timer'), 
-            phase: $('phase-display'), cycle: $('cycle-display'), total: $('total-time-display'),
-            counterFloat: $('float-counter'),
-            btnMain: $('main-action-button'), btnStop: $('stop-button'), btnMainText: $('main-action-button').querySelector('span'),
-            coach: $('coach-box'), coachTxt: $('coach-text'),
-            transOver: $('transition-overlay'), transTxt: $('transition-text'),
+            timerFloat: $('float-timer'), phase: $('phase-display'), cycle: $('cycle-display'), total: $('total-time-display'), counterFloat: $('float-counter'),
+            btnMain: $('main-action-button'), btnStop: $('stop-button'), btnMainText: $('main-action-button').querySelector('span'), btnMainIcon: $('play-icon'),
+            coach: $('coach-box'), coachTxt: $('coach-text'), transOver: $('transition-overlay'), transTxt: $('transition-text'),
             loader: $('loader-container'), bar: $('progress-bar-fill'), loadTxt: $('loader-text'),
-            selMode: $('work-duration-selector'), selTotal: $('total-duration-selector'),
-            placeholder: $('diapo-placeholder'), err: $('diapo-error'),
-            folderStatus: $('folder-status')
+            selMode: $('work-duration-selector'), selTotal: $('total-duration-selector'), placeholder: $('diapo-placeholder'), err: $('diapo-error'), folderStatus: $('folder-status'),
+            gauge: $('gauge-bar'), smallTimer: $('small-timer')
         };
 
-        // --- AUDIO ---
+        const icons = {
+            play: '<polygon points="5 3 19 12 5 21 5 3"></polygon>',
+            pause: '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>'
+        };
+
         let sounds = {};
         async function initAudio() {
             if (Tone.context.state !== 'running') await Tone.start();
@@ -314,56 +348,48 @@
             if(s==='trans') sounds.trans.triggerAttackRelease("C6", "0.8");
         }};
 
-        // --- LOGIC ---
         function calcStructure() {
             if (state.mode === 'CLASS_30') state.structure = CLASS_30;
             else if (state.mode === 'CLASS_60') state.structure = CLASS_60;
             else state.structure = Array(state.customTotal).fill(parseInt(state.mode));
-            
             state.totalLeft = state.structure.reduce((a,b)=>a+b, 0);
             updateInfoUI();
         }
 
         function updateInfoUI() {
             const max = state.structure.length;
-            const h = Math.floor(state.totalLeft/3600);
-            const m = Math.floor((state.totalLeft%3600)/60);
+            const h = Math.floor(state.totalLeft/3600); const m = Math.floor((state.totalLeft%3600)/60);
             const txt = (h>0?h+'h':'') + (m>0?m+'m':'') + (state.totalLeft<60 ? state.totalLeft+'s' : '');
             els.total.textContent = txt || '0m';
-            els.cycle.textContent = `${String(state.cycle).padStart(2,'0')} / ${max}`;
+            els.cycle.textContent = `${String(state.cycle).padStart(2,'0')}/${max}`;
             els.counterFloat.textContent = `${state.cycle} / ${max}`;
         }
 
-        function formatTime(s) {
-            const m = Math.floor(s/60); const sc = s%60;
-            return `${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
-        }
+        function formatTime(s) { const m = Math.floor(s/60); const sc = s%60; return `${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`; }
 
         function showImage(idx) {
-            // Reset transforms
-            state.img = { scale:1, x:0, y:0, flip:false, bw:true, thresh:false, blur:false, rot:0 };
-            updateImgCSS();
-
+            state.img = { scale:1, x:0, y:0, flip:false, bw:true, thresh:false, blur:false, rot:0 }; updateImgCSS();
             const src = state.playlist[idx];
             if(src) {
                 els.img.src = src; els.img.style.display = 'block'; els.err.style.display = 'none';
                 els.toolbar.style.display = 'flex'; els.btnExpand.style.display = 'block';
-                // Coach
                 const d = state.structure[idx];
-                els.coach.style.display = 'block';
+                els.coach.classList.add('active'); // CSS handles mobile hiding
                 if(d<=45) els.coachTxt.textContent = "⚡ GESTUELLE : Mouvement et énergie !";
                 else if(d<=150) els.coachTxt.textContent = "🧱 VOLUMES : Masses et silhouette.";
-                else if(d<=330) els.coachTxt.textContent = "🏗️ CONSTRUCTION : Structure et ombres.";
+                else if(d<=330) els.coachTxt.textContent = "🏗️ CONSTRUCTION : Structure.";
                 else els.coachTxt.textContent = "🎨 DÉTAILS : Rendu et finitions.";
-            } else {
-               els.img.style.display = 'none'; els.err.style.display = 'flex';
-            }
+            } else { els.img.style.display = 'none'; els.err.style.display = 'flex'; }
         }
 
         function updateTimerUI() {
             const t = formatTime(state.timeLeft);
-            els.timerMain.textContent = t;
+            els.smallTimer.textContent = t;
             els.timerFloat.textContent = t;
+            // Update GAUGE width
+            const pct = Math.max(0, (state.timeLeft / state.currentMaxTime) * 100);
+            els.gauge.style.width = `${pct}%`;
+
             if(state.timeLeft <= 5 && state.timeLeft > 0) play('tick');
         }
 
@@ -371,107 +397,80 @@
             if(state.paused || state.transitioning) return;
             state.timeLeft--;
             if(state.totalLeft > 0) state.totalLeft--;
-            updateTimerUI();
-            updateInfoUI();
-
-            if(state.timeLeft <= 0) {
-                nextPose();
-            }
+            updateTimerUI(); updateInfoUI();
+            if(state.timeLeft <= 0) nextPose();
         }
 
         function nextPose() {
-            // Check transition
             const currentDur = state.structure[state.cycle-1];
-            const nextDur = state.structure[state.cycle]; // cycle is 1-based index for display, so index in array is cycle
+            const nextDur = state.structure[state.cycle];
             const isLast = state.cycle >= state.structure.length;
 
-            if(!isLast && nextDur !== currentDur && (state.mode.startsWith('CLASS'))) {
-                 doTransition(nextDur);
-                 return;
-            }
-
-            if(isLast) {
-                endSession();
-            } else {
-                play('gong');
-                state.cycle++;
+            if(!isLast && nextDur !== currentDur && (state.mode.startsWith('CLASS'))) { doTransition(nextDur); return; }
+            if(isLast) { endSession(); } 
+            else {
+                play('gong'); state.cycle++;
                 state.timeLeft = state.structure[state.cycle-1];
-                showImage(state.cycle-1);
-                updateInfoUI();
+                state.currentMaxTime = state.timeLeft; // Set new max for gauge
+                showImage(state.cycle-1); updateInfoUI();
             }
         }
 
         function doTransition(duration) {
-            state.transitioning = true;
-            play('trans');
-            els.img.style.display = 'none'; els.toolbar.style.display = 'none'; els.coach.style.display = 'none';
+            state.transitioning = true; play('trans');
+            els.img.style.display = 'none'; els.toolbar.style.display = 'none'; els.coach.classList.remove('active');
             els.transOver.style.display = 'flex';
             const min = Math.floor(duration/60);
-            els.transTxt.textContent = (duration===300) ? `Dernière Pose : ${min} min` : `Prochaines : ${duration>=60?min+' min':duration+' s'}`;
-            
+            els.transTxt.textContent = (duration===300) ? `Dernière : ${min} min` : `Prochaines : ${duration>=60?min+' min':duration+' s'}`;
             setTimeout(() => {
-                state.transitioning = false;
-                els.transOver.style.display = 'none';
+                state.transitioning = false; els.transOver.style.display = 'none';
                 state.cycle++;
                 state.timeLeft = state.structure[state.cycle-1];
-                play('start');
-                showImage(state.cycle-1);
-                updateInfoUI();
+                state.currentMaxTime = state.timeLeft;
+                play('start'); showImage(state.cycle-1); updateInfoUI();
             }, 5000);
         }
 
         function startSession() {
             state.running = true; state.paused = false;
-            els.btnMain.style.background = 'var(--accent)';
-            els.btnMainText.textContent = "PAUSE";
+            els.btnMain.style.background = 'var(--accent)'; els.btnMainText.textContent = "PAUSE"; els.btnMainIcon.innerHTML = icons.pause;
             els.btnStop.disabled = false; els.placeholder.style.display = 'none';
             els.selMode.disabled = true; els.selTotal.disabled = true;
+            els.phase.textContent = "En cours";
             
-            // Prepare playlist
             state.playlist = [];
             let pile = [...state.images];
-            // Simple shuffle
             for (let i = pile.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pile[i], pile[j]] = [pile[j], pile[i]]; }
-            
-            for(let i=0; i<state.structure.length; i++) {
-                if(pile.length===0) pile = [...state.images].sort(()=>Math.random()-0.5);
-                state.playlist.push(pile.pop());
-            }
+            for(let i=0; i<state.structure.length; i++) { if(pile.length===0) pile = [...state.images].sort(()=>Math.random()-0.5); state.playlist.push(pile.pop()); }
 
-            // Preload logic could go here, simply showing first one for now
             state.cycle = 1;
             state.timeLeft = state.structure[0];
-            showImage(0);
-            play('start');
+            state.currentMaxTime = state.timeLeft;
+            showImage(0); play('start');
             timerId = setInterval(tick, 1000);
         }
 
         function togglePause() {
-            if(!state.running) {
-                initAudio().then(startSession);
-                return;
-            }
+            if(!state.running) { initAudio().then(startSession); return; }
             state.paused = !state.paused;
             if(state.paused) {
-                els.btnMain.style.background = '#e3b341'; els.btnMainText.textContent = "REPRENDRE";
+                els.btnMain.style.background = '#e3b341'; els.btnMainText.textContent = "REPRENDRE"; els.btnMainIcon.innerHTML = icons.play;
                 els.phase.textContent = "PAUSE";
             } else {
-                els.btnMain.style.background = 'var(--accent)'; els.btnMainText.textContent = "PAUSE";
+                els.btnMain.style.background = 'var(--accent)'; els.btnMainText.textContent = "PAUSE"; els.btnMainIcon.innerHTML = icons.pause;
                 els.phase.textContent = "En cours";
             }
         }
 
         function endSession() {
-            clearInterval(timerId); state.running = false;
-            play('finish');
+            clearInterval(timerId); state.running = false; play('finish');
             els.phase.textContent = "Terminé !";
-            els.btnMain.textContent = "Terminé"; els.btnMain.disabled = true;
+            els.btnMain.textContent = "FIN"; els.btnMain.disabled = true;
             els.img.style.display = 'none'; els.toolbar.style.display = 'none';
-            // Reset visual after 3s
+            generateConfetti();
             setTimeout(() => location.reload(), 3000);
         }
 
-        // --- IMAGE MANIPULATION ---
         function updateImgCSS() {
             let f = "";
             if(state.img.thresh) f += "grayscale(100%) contrast(300%) brightness(1.1) ";
@@ -480,8 +479,6 @@
             els.img.style.filter = f;
             els.img.style.transform = `rotate(${state.img.rot}deg) scaleX(${state.img.flip?-1:1})`;
             els.container.style.transform = `translate(${state.img.x}px, ${state.img.y}px) scale(${state.img.scale})`;
-            
-            // Buttons state
             $('btn-bw').classList.toggle('active', state.img.bw && !state.img.thresh);
             $('btn-threshold').classList.toggle('active', state.img.thresh);
             $('btn-blur').classList.toggle('active', state.img.blur);
@@ -490,81 +487,41 @@
 
         function toggleFullscreen() {
             state.fullscreen = !state.fullscreen;
-            if(state.fullscreen) {
-                els.body.classList.add('fullscreen-active');
-                els.iconExpand.style.display = 'none'; els.iconCompress.style.display = 'block';
-            } else {
-                els.body.classList.remove('fullscreen-active');
-                els.iconExpand.style.display = 'block'; els.iconCompress.style.display = 'none';
-                // Reset zoom on exit
-                state.img.scale = 1; state.img.x = 0; state.img.y = 0; updateImgCSS();
-            }
+            if(state.fullscreen) { els.body.classList.add('fullscreen-active'); els.iconExpand.style.display = 'none'; els.iconCompress.style.display = 'block'; } 
+            else { els.body.classList.remove('fullscreen-active'); els.iconExpand.style.display = 'block'; els.iconCompress.style.display = 'none'; state.img.scale = 1; state.img.x = 0; state.img.y = 0; updateImgCSS(); }
         }
 
-        // --- EVENTS ---
-        
-        // Folder
         $('btn-select-folder').onclick = () => $('folder-input').click();
         $('folder-input').onchange = (e) => {
             const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
-            if(files.length) {
-                state.images = files.map(f => URL.createObjectURL(f));
-                els.folderStatus.textContent = `${files.length} images chargées !`;
-                els.btnMain.disabled = false;
-            }
+            if(files.length) { state.images = files.map(f => URL.createObjectURL(f)); els.folderStatus.textContent = `${files.length} images !`; els.btnMain.disabled = false; }
         };
-
-        // Selectors
-        els.selMode.onchange = (e) => {
-            state.mode = e.target.value;
-            els.selTotal.disabled = state.mode.startsWith('CLASS');
-            calcStructure();
-        };
-        els.selTotal.onchange = (e) => {
-            state.customTotal = parseInt(e.target.value);
-            calcStructure();
-        };
-
-        // Buttons
+        els.selMode.onchange = (e) => { state.mode = e.target.value; els.selTotal.disabled = state.mode.startsWith('CLASS'); calcStructure(); };
+        els.selTotal.onchange = (e) => { state.customTotal = parseInt(e.target.value); calcStructure(); };
         els.btnMain.onclick = togglePause;
         els.btnStop.onclick = () => location.reload();
         
-        // Tool buttons
         $('btn-bw').onclick = () => { state.img.bw = !state.img.bw; if(state.img.thresh) state.img.thresh = false; updateImgCSS(); };
         $('btn-threshold').onclick = () => { state.img.thresh = !state.img.thresh; updateImgCSS(); };
         $('btn-blur').onclick = () => { state.img.blur = !state.img.blur; updateImgCSS(); };
         $('btn-flip').onclick = () => { state.img.flip = !state.img.flip; updateImgCSS(); };
         $('btn-rotate').onclick = () => { state.img.rot = (state.img.rot+90)%360; updateImgCSS(); };
 
-        // --- TOUCH / MOUSE INTERACTION ---
-        
-        // Double Tap Zoom
         let lastTap = 0;
         els.display.addEventListener('touchend', (e) => {
-            const cTime = new Date().getTime();
-            const tapLen = cTime - lastTap;
-            if (tapLen < 300 && tapLen > 0) {
-                // Double Tap logic
-                if(state.img.scale > 1) { state.img.scale = 1; state.img.x = 0; state.img.y = 0; }
-                else { state.img.scale = 2.5; } // Zoom X2.5
-                updateImgCSS();
-                e.preventDefault();
-            }
+            const cTime = new Date().getTime(); const tapLen = cTime - lastTap;
+            if (tapLen < 300 && tapLen > 0) { if(state.img.scale > 1) { state.img.scale = 1; state.img.x = 0; state.img.y = 0; } else { state.img.scale = 2.5; } updateImgCSS(); e.preventDefault(); }
             lastTap = cTime;
         });
 
-        // Navigation Zones (Left/Right)
         $('zone-right').onclick = () => { if(state.running && !state.paused) { state.timeLeft = 0; tick(); } };
-        $('zone-left').onclick = () => { togglePause(); }; // Left tap pauses for now, safer
+        $('zone-left').onclick = () => { togglePause(); };
 
-        // INIT SELECTORS
-        for(let i=1; i<=50; i++) {
-            let o = document.createElement('option'); o.value=i; o.text=`${i} Poses`;
-            els.selTotal.appendChild(o);
-        }
-        els.selTotal.value = 30;
-        calcStructure(); // Init default
+        for(let i=1; i<=50; i++) { let o = document.createElement('option'); o.value=i; o.text=`${i} Poses`; els.selTotal.appendChild(o); }
+        els.selTotal.value = 30; calcStructure();
 
+        const C_COLORS = ['#58a6ff', '#f00', '#0f0', '#ff0', '#fff']; 
+        function generateConfetti() { const c = document.getElementById('finish-animation-container'); c.innerHTML=''; const rect = c.getBoundingClientRect(); const cx = rect.width/2; const cy = rect.height/2; for(let i=0;i<50;i++){ let d=document.createElement('div'); d.className='confetti-dot'; d.style.backgroundColor=C_COLORS[Math.floor(Math.random()*C_COLORS.length)]; let a=Math.random()*2*Math.PI; let dist=Math.max(rect.width,rect.height)*0.7*Math.random(); d.style.left=`${cx}px`; d.style.top=`${cy}px`; setTimeout(()=>{ d.style.transition='transform 2.5s ease-out, opacity 2.5s ease-out'; d.style.opacity=0; d.style.transform=`translate(-50%,-50%) translate(${Math.cos(a)*dist}px, ${Math.sin(a)*dist}px)`; },10); c.appendChild(d); } setTimeout(() => { c.innerHTML = ''; }, 2600); }
     </script>
 </body>
 </html>

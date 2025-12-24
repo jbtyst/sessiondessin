@@ -1,6 +1,6 @@
 {
   "name": "Session Dessin",
-  "short_name": "Dessin",
+  "short_name": "SessDess",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0d1117",

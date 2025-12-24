@@ -3,22 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Session Dessin V5.1</title>
+    <title>Session Dessin V5.3</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#0d1117">
     <link rel="apple-touch-icon" href="icon.png">
 
-    <script src="https://cdn.tailwindcss.com">
-// GESTION DU SPLASH SCREEN
-window.addEventListener('load', () => {
-    // On attend un peu (ex: 2 secondes) pour montrer le logo
-    setTimeout(() => {
-        const splash = document.getElementById('custom-splash');
-        if(splash) splash.classList.add('fade-out');
-    }, 2000); 
-});
-</script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Kalam:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -46,138 +37,61 @@ window.addEventListener('load', () => {
         /* --- GLOBAL --- */
         html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--bg-body); color: var(--text-main); font-family: 'Inter', sans-serif; touch-action: manipulation; }
         
-        .app-layout { 
-            display: flex; flex-direction: column; height: 100%; 
-            overflow-y: hidden; /* Lock scroll globally */
-        }
+        .app-layout { display: flex; flex-direction: column; height: 100%; overflow-y: hidden; }
 
-        /* --- DISPLAY AREA (L'IMAGE) --- */
+        /* --- DISPLAY AREA --- */
         .display-area {
-            position: relative;
-            background-color: #000;
-            width: 100%;
-            /* Sur mobile, on donne plus de place à l'image, le reste s'adapte */
-            height: 55vh; 
-            flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden;
-            transition: height 0.3s ease;
+            position: relative; background-color: #000; width: 100%; height: 55vh; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; overflow: hidden; transition: height 0.3s ease;
         }
-
-        /* MODE PLEIN ÉCRAN */
         body.fullscreen-active .display-area { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; }
         body.fullscreen-active .timer-area { display: none; }
 
         #transform-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform-origin: center; will-change: transform; }
         #diapo-image { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; transition: filter 0.2s; }
         
-        /* HUD FLOTTANT (Timer Plein écran) */
         #floating-hud {
-            position: absolute; top: 20px; right: 20px;
-            background-color: var(--floating-timer); backdrop-filter: blur(4px);
-            padding: 8px 12px; border-radius: 12px;
-            display: none; flex-direction: column; align-items: flex-end;
+            position: absolute; top: 20px; right: 20px; background-color: var(--floating-timer); backdrop-filter: blur(4px);
+            padding: 8px 12px; border-radius: 12px; display: none; flex-direction: column; align-items: flex-end;
             border: 1px solid rgba(128,128,128,0.3); pointer-events: none;
         }
         body.fullscreen-active #floating-hud { display: flex; }
 
-        /* Toolbar */
         #image-toolbar {
             position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
             background-color: var(--overlay); backdrop-filter: blur(8px);
-            padding: 6px 12px; border-radius: 999px;
-            display: none; gap: 12px; align-items: center;
+            padding: 6px 12px; border-radius: 999px; display: none; gap: 12px; align-items: center;
             border: 1px solid rgba(128,128,128,0.3); z-index: 60;
         }
-        
         .tool-btn { background: none; border: none; color: var(--text-main); padding: 8px; border-radius: 8px; transition: 0.2s; }
         .tool-btn:active { transform: scale(0.9); }
         .tool-btn.active { color: #fff; background-color: var(--accent); }
         
-        #btn-expand {
-            position: absolute; top: 15px; left: 15px; z-index: 60;
-            background-color: var(--overlay); border-radius: 50%; padding: 8px;
-            color: var(--text-main); border: 1px solid rgba(128,128,128,0.3);
-            display: none; 
-        }
+        #btn-expand { position: absolute; top: 15px; left: 15px; z-index: 60; background-color: var(--overlay); border-radius: 50%; padding: 8px; color: var(--text-main); border: 1px solid rgba(128,128,128,0.3); display: none; }
 
-        /* --- CONTROLS AREA (Bas) --- */
-        .timer-area {
-            flex: 1; padding: 15px 20px; overflow-y: auto;
-            background-color: var(--bg-body);
-            display: flex; flex-direction: column; 
-        }
-        
-        .container {
-            width: 100%; max-width: 500px; margin: 0 auto;
-            background-color: var(--bg-container); border: 1px solid rgba(128,128,128,0.2);
-            border-radius: 16px; padding: 15px;
-            display: flex; flex-direction: column; gap: 10px;
-        }
+        /* --- CONTROLS --- */
+        .timer-area { flex: 1; padding: 15px 20px; overflow-y: auto; background-color: var(--bg-body); display: flex; flex-direction: column; }
+        .container { width: 100%; max-width: 500px; margin: 0 auto; background-color: var(--bg-container); border: 1px solid rgba(128,128,128,0.2); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
 
-        /* --- NEW GAUGE TIMER --- */
-        .gauge-container {
-            width: 100%; height: 16px; 
-            background-color: var(--bg-body);
-            border: 1px solid rgba(128,128,128,0.3);
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 5px;
-        }
-        .gauge-fill {
-            height: 100%;
-            background-color: var(--accent);
-            width: 100%;
-            transition: width 1s linear; /* Animation fluide seconde par seconde */
-        }
-        .small-timer-text {
-            font-size: 0.85rem; font-weight: bold; color: var(--text-main); opacity: 0.8; text-align: center; font-variant-numeric: tabular-nums;
-        }
+        .gauge-container { width: 100%; height: 16px; background-color: var(--bg-body); border: 1px solid rgba(128,128,128,0.3); border-radius: 8px; overflow: hidden; position: relative; margin-bottom: 5px; }
+        .gauge-fill { height: 100%; background-color: var(--accent); width: 100%; transition: width 1s linear; }
+        .small-timer-text { font-size: 0.85rem; font-weight: bold; color: var(--text-main); opacity: 0.8; text-align: center; font-variant-numeric: tabular-nums; }
 
-        /* --- BUTTONS ROW --- */
         .btn-row { display: flex; gap: 10px; width: 100%; margin-top: 5px; }
-        .btn-main {
-            background-color: var(--accent); color: white; 
-            border-radius: 10px; font-weight: bold; font-size: 1rem;
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-            padding: 12px; transition: opacity 0.2s;
-        }
+        .btn-main { background-color: var(--accent); color: white; border-radius: 10px; font-weight: bold; font-size: 1rem; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 12px; transition: opacity 0.2s; }
         .btn-stop { background-color: #d32f2f; color: white; opacity: 0.9; }
         .btn-main:disabled { opacity: 0.4; background-color: #555; }
-        .btn-main:active { transform: translateY(1px); }
+        .select-ui { width: 100%; background-color: var(--bg-body); color: var(--text-main); padding: 8px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.3); font-size: 0.9rem; }
 
-        /* Selectors */
-        .select-ui {
-            width: 100%; background-color: var(--bg-body); color: var(--text-main);
-            padding: 8px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.3);
-            font-size: 0.9rem;
-        }
-
-        /* COACH (Hidden on Mobile) */
-        #coach-box {
-            margin-top: 5px; padding: 8px; border-radius: 6px;
-            background-color: var(--accent-dim); color: var(--accent); 
-            text-align: center; border: 1px solid var(--accent);
-            display: none; /* JS will toggle, but CSS hides on mobile */
-        }
+        #coach-box { margin-top: 5px; padding: 8px; border-radius: 6px; background-color: var(--accent-dim); color: var(--accent); text-align: center; border: 1px solid var(--accent); display: none; }
         .coach-title { font-weight: 800; font-size: 0.65rem; opacity: 0.9; text-transform: uppercase; margin-bottom:2px;}
         .coach-message { font-weight: 600; font-size: 0.85rem; line-height: 1.2; }
+        @media (min-width: 768px) { #coach-box.active { display: block; } }
 
-        /* Media Query: Show coach only on larger screens */
-        @media (min-width: 768px) {
-            #coach-box.active { display: block; }
-        }
-
-        /* --- LOADER & OVERLAYS --- */
-        #loader-container, #transition-overlay, #diapo-placeholder, #diapo-error {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 20; text-align: center;
-        }
+        /* UTILITAIRES */
+        #loader-container, #transition-overlay, #diapo-placeholder, #diapo-error { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; text-align: center; }
         #loader-container, #transition-overlay, #diapo-error { display: none; background-color: var(--bg-container); }
         #diapo-placeholder { background-color: var(--bg-display); z-index: 10; }
-
         .progress-bar { width: 60%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-top: 10px; }
         .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; }
         .touch-zone { position: absolute; top: 0; height: 100%; width: 20%; z-index: 40; }
@@ -185,60 +99,9 @@ window.addEventListener('load', () => {
         .img-flipped { transform: scaleX(-1); }
         .confetti-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; }
         #finish-animation-container { position: absolute; top: 0; bottom: 0; left: 0; right: 0; pointer-events: none; z-index: 50; overflow: hidden; }
-
-/* --- SPLASH SCREEN --- */
-#custom-splash {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: var(--bg-body); /* Même fond que l'app */
-    z-index: 9999; /* Au-dessus de TOUT */
-    display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.6s ease-out, visibility 0.6s;
-}
-
-.splash-content { text-align: center; animation: floatUp 0.8s ease-out; }
-
-.splash-icon { 
-    color: var(--accent); 
-    margin-bottom: 20px; 
-    width: 80px; height: 80px;
-}
-
-.splash-title {
-    font-family: 'Kalam', cursive;
-    font-size: 2.5rem;
-    color: var(--text-main);
-    margin: 0;
-}
-
-.splash-subtitle {
-    color: var(--text-main);
-    opacity: 0.6;
-    margin-top: 5px;
-    font-size: 1rem;
-}
-
-/* Quand on ajoute la classe .fade-out via JS */
-#custom-splash.fade-out {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
-
-@keyframes floatUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
     </style>
 </head>
 <body>
-
-<div id="custom-splash">
-    <div class="splash-content">
-        <svg class="splash-icon" xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
-        <h1 class="splash-title">Session Dessin</h1>
-        <p class="splash-subtitle">Préparez vos crayons...</p>
-    </div>
-</div>
 
     <div class="app-layout">
         

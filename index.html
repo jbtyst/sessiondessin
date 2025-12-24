@@ -3,859 +3,568 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Session Dessin V4.2</title>
+    <title>Session Dessin V5.0</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0d1117">
+    <meta name="theme-color" content="#000000">
     <link rel="apple-touch-icon" href="icon.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Kalam:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* --- VARIABLES DE THÈME --- */
+        /* --- VARIABLES --- */
         :root {
-            --color-bg-body: #0d1117;
-            --color-bg-container: #161b22;
-            --color-bg-display: #010409;
-            --color-text-primary: #c9d1d9;
-            --color-border: #30363d;
-            --color-input-bg: #0d1117;
-            --color-text-secondary: #909bab; 
-            
-            --color-upload-bg: rgba(0, 0, 0, 0.2);
-
-            --color-accent-blue: #58a6ff; 
-            --color-rest-text: #f85149; 
-            --color-success-bg: #238636; 
-            --color-pause-bg: #58a6ff; 
-            --color-resume-bg: #e3b341; 
-            --color-stop-bg: #6e7681; 
-            --color-next-bg: #1f6feb;
-            --color-dot-inactive: #30363d;
-            --color-dot-active: #58a6ff;
-            
-            --color-coach-bg: rgba(31, 111, 235, 0.15);
-            --color-coach-border: rgba(31, 111, 235, 0.4);
-            --color-coach-text: #58a6ff;
-
-            --dial-text-glow: none; 
-            --color-dial-text: #ffffff;
-            --overlay-bg: rgba(0,0,0,0.6);
-            --transition-bg: rgba(31, 111, 235, 0.95);
+            --bg-body: #0d1117;
+            --bg-container: #161b22;
+            --text-main: #c9d1d9;
+            --accent: #58a6ff; 
+            --overlay: rgba(0,0,0,0.7);
+            --floating-timer: rgba(0,0,0,0.6);
         }
 
         body.light-mode {
-            --color-bg-body: #f0f6fc;
-            --color-bg-container: #ffffff;
-            --color-bg-display: #eef2f6;
-            --color-text-primary: #24292f;
-            --color-border: #d0d7de;
-            --color-input-bg: #e1e4e8;
-            --color-text-secondary: #57606a; 
-            
-            --color-upload-bg: rgba(255, 255, 255, 0.6);
-            
-            --color-accent-blue: #0366d6; 
-            --color-rest-text: #cf222e; 
-            --color-success-bg: #2da44e; 
-            --color-pause-bg: #0366d6; 
-            --color-resume-bg: #d29922;
-            --color-stop-bg: #6e7681;
-            --color-next-bg: #0969da;
-            --color-dot-inactive: #d0d7de;
-            --color-dot-active: #0366d6;
-            
-            --color-coach-bg: rgba(3, 102, 214, 0.1);
-            --color-coach-border: rgba(3, 102, 214, 0.3);
-            --color-coach-text: #0366d6;
-            
-            --color-dial-text: #000000;
-            --overlay-bg: rgba(255,255,255,0.8);
-            --transition-bg: rgba(255, 255, 255, 0.95);
+            --bg-body: #f0f6fc;
+            --bg-container: #ffffff;
+            --text-main: #24292f;
+            --accent: #0366d6;
+            --overlay: rgba(255,255,255,0.85);
+            --floating-timer: rgba(255,255,255,0.8);
         }
 
-        html, body { height: 100%; margin: 0; overflow: hidden; /* Prevent body scroll, handle in layout */ }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--color-bg-body);
-            color: var(--color-text-primary);
-            display: flex;
-            flex-direction: column; 
-            transition: background-color 0.3s;
-        }
-
-        /* --- HEADER --- */
-        .global-header {
-            width: 100%; padding: 0.75rem; text-align: center;
-            background-color: var(--color-bg-body); flex-shrink: 0;
-            border-bottom: 1px solid var(--color-border); z-index: 10;
-        }
-        .app-title {
-            font-family: 'Kalam', cursive; font-size: 2rem; font-weight: 700;
-            color: var(--color-dial-text); margin: 0; display: inline-flex; align-items: center; gap: 10px;
-            position: relative; transition: color 0.3s;
-        }
-        .app-title::after {
-            content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 10px; 
-            border-top: 3px solid var(--color-accent-blue); border-bottom: none; border-radius: 50%;
-            background-color: transparent; transform: rotate(-2deg); pointer-events: none;
-        }
+        /* --- GLOBAL --- */
+        html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--bg-body); color: var(--text-main); font-family: 'Inter', sans-serif; touch-action: manipulation; }
         
-        /* --- LAYOUT RESPONSIVE (CORRECTION MOBILE) --- */
         .app-layout { 
-            display: flex; 
-            flex-direction: column; 
-            flex: 1; 
-            overflow-y: auto; /* IMPORTANT: Permet le scroll sur mobile */
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch; 
-        }
-        
-        /* Sur PC (Large écran) : On remet en ligne et on bloque le scroll global */
-        @media (min-width: 1024px) { 
-            .app-layout { 
-                flex-direction: row; 
-                overflow: hidden; 
-            } 
+            display: flex; flex-direction: column; height: 100%; 
+            /* Sur mobile, on permet le scroll si nécessaire dans la vue normale */
+            overflow-y: auto; 
         }
 
-        /* --- GAUCHE (DISPLAY) --- */
+        /* --- DISPLAY AREA (L'IMAGE) --- */
         .display-area {
-            flex-shrink: 0; /* Ne pas écraser l'image */
-            background-color: var(--color-bg-display);
-            border-right: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);
-            padding: 0; display: flex; align-items: center; justify-content: center;
-            transition: background-color 0.3s; overflow: hidden; position: relative;
-            
-            /* CORRECTION HAUTEUR MOBILE */
-            height: 35vh; /* Prend 35% de la hauteur écran sur mobile */
-            min-height: 250px;
-            cursor: grab;
-        }
-        .display-area:active { cursor: grabbing; }
-        
-        @media (min-width: 1024px) { 
-            .display-area { 
-                flex: 1; /* Prend tout l'espace restant sur PC */
-                height: auto; 
-                min-height: 0;
-                border-bottom: none; 
-                width: 66.666%; 
-            } 
-        }
-
-        /* Conteneur Placeholder Centré */
-        #diapo-placeholder {
-            width: 100%; height: 100%;
+            position: relative;
+            background-color: #000; /* Toujours noir pour le contraste image */
+            width: 100%;
+            height: 40vh; /* Par défaut : 40% de l'écran */
+            flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
-            position: absolute; top: 0; left: 0; z-index: 10;
+            overflow: hidden;
+            transition: height 0.3s ease;
         }
 
-        /* Conteneur de manipulation (Zoom/Pan) */
-        #transform-container {
-            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-            transform-origin: center center;
-            will-change: transform;
-            position: relative; 
+        /* MODE PLEIN ÉCRAN (Classe ajoutée via JS) */
+        body.fullscreen-active .display-area {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 50;
         }
+        body.fullscreen-active .timer-area { display: none; } /* Cache les réglages */
 
-        /* TRANSITION OVERLAY */
-        #transition-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--color-bg-container);
-            z-index: 50;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem;
-            animation: fadeIn 0.3s ease-out;
+        /* Image et Container */
+        #transform-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform-origin: center; will-change: transform; }
+        #diapo-image { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; transition: filter 0.2s; }
+        
+        /* --- FLOATING UI (HUD) --- */
+        
+        /* Minuteur Flottant (Visible seulement en Fullscreen) */
+        #floating-hud {
+            position: absolute; top: 20px; right: 20px;
+            background-color: var(--floating-timer); backdrop-filter: blur(4px);
+            padding: 8px 12px; border-radius: 12px;
+            display: none; flex-direction: column; align-items: flex-end;
+            border: 1px solid rgba(128,128,128,0.3); pointer-events: none;
         }
-        .transition-icon { color: var(--color-accent-blue); width: 64px; height: 64px; margin-bottom: 1rem; }
-        .transition-title { font-size: 1.5rem; font-weight: 800; color: var(--color-text-primary); margin-bottom: 0.5rem; font-family: 'Kalam', cursive; }
-        .transition-subtitle { font-size: 1rem; color: var(--color-text-secondary); }
+        body.fullscreen-active #floating-hud { display: flex; }
 
-        /* Image réelle et FILTRES */
-        #diapo-image {
-            max-width: 100%; max-height: 100%; object-fit: contain; 
-            display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            transition: filter 0.3s ease; 
-            pointer-events: none;
-        }
-
-        /* Toolbar */
+        /* Toolbar (Outils) */
         #image-toolbar {
-            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-            background-color: var(--overlay-bg); backdrop-filter: blur(5px);
-            padding: 0.4rem 0.8rem; border-radius: 999px;
-            display: none; gap: 0.6rem; align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: 1px solid var(--color-border);
-            z-index: 100;
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background-color: var(--overlay); backdrop-filter: blur(8px);
+            padding: 6px 12px; border-radius: 999px;
+            display: none; gap: 12px; align-items: center;
+            border: 1px solid rgba(128,128,128,0.3); z-index: 60;
         }
-        .tool-btn {
-            background: none; border: none; color: var(--color-text-primary); cursor: pointer;
-            padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-            transition: color 0.2s, background-color 0.2s;
+        
+        .tool-btn { background: none; border: none; color: var(--text-main); padding: 8px; border-radius: 8px; transition: 0.2s; }
+        .tool-btn:active { transform: scale(0.9); }
+        .tool-btn.active { color: #fff; background-color: var(--accent); }
+        
+        /* Bouton "Expand" (Plein écran) */
+        #btn-expand {
+            position: absolute; top: 15px; left: 15px; z-index: 60;
+            background-color: var(--overlay); border-radius: 50%; padding: 8px;
+            color: var(--text-main); border: 1px solid rgba(128,128,128,0.3);
+            display: none; /* Visible seulement quand une image est là */
         }
-        .tool-btn:hover { color: var(--color-accent-blue); background-color: rgba(255,255,255,0.1); }
-        .tool-btn.active { color: var(--color-bg-display); background-color: var(--color-accent-blue); }
-        .divider { width: 1px; height: 20px; background-color: var(--color-text-secondary); opacity: 0.3; }
 
-        /* --- DROITE (TIMER) --- */
+        /* --- TIMER AREA (Interface bas) --- */
         .timer-area {
-            width: 100%; padding: 1rem; 
-            display: flex; align-items: flex-start; justify-content: center; 
-            background-color: var(--color-bg-body); transition: background-color 0.3s; z-index: 20;
-            flex: 1; /* Prend l'espace restant en hauteur */
+            flex: 1; padding: 20px; overflow-y: auto;
+            background-color: var(--bg-body);
+            display: flex; flex-direction: column; justify-content: flex-start;
         }
-        @media (min-width: 1024px) { 
-            .timer-area { 
-                width: 33.333%; height: auto; overflow-y: auto; align-items: center; 
-            } 
-        }
-
+        
         .container {
-            width: 100%; max-width: 480px; padding: 1.5rem;
-            background-color: var(--color-bg-container); border: 1px solid var(--color-border);
-            display: flex; flex-direction: column; justify-content: space-between; 
-            border-radius: 0.75rem; transition: background-color 0.3s, border-color 0.3s; margin: auto; 
-            /* CORRECTION: s'assure que le container ne soit pas trop collé au bord en scrollant */
-            margin-bottom: 2rem; 
+            width: 100%; max-width: 500px; margin: 0 auto;
+            background-color: var(--bg-container); border: 1px solid rgba(128,128,128,0.2);
+            border-radius: 16px; padding: 20px;
         }
 
-        .select-custom {
-            background-color: var(--color-input-bg); border: 1px solid var(--color-border);
-            color: var(--color-text-primary); padding: 0.5rem 1rem; border-radius: 0.5rem;
-            width: 100%; transition: background-color 0.3s; font-size: 0.9rem;
+        /* --- ELEMENTS UI --- */
+        .big-timer { font-size: 3.5rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+        .btn-main {
+            background-color: var(--accent); color: white; width: 100%; padding: 15px;
+            border-radius: 12px; font-weight: bold; font-size: 1.1rem;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            margin-top: 10px;
         }
-
-        #seconds-display-box {
-            background-color: var(--color-input-bg); border: 1px solid var(--color-border);
-            padding: 0.5rem 1rem; border-radius: 0.5rem; display: inline-block; transition: background-color 0.3s;
-        }
-        #seconds-display { font-size: 3rem; font-weight: 800; line-height: 1; text-shadow: var(--dial-text-glow); transition: color 0.3s; }
-        #phase-display { font-size: 0.9rem; font-weight: 700; margin-top: 0.75rem; }
-
-        /* COACH BOX */
-        #coach-box {
-            margin-top: 1rem; padding: 0.75rem; border-radius: 0.5rem;
-            background-color: var(--color-coach-bg); border: 1px solid var(--color-coach-border);
-            color: var(--color-coach-text); text-align: center;
-            display: none;
-            animation: fadeIn 0.5s ease-out;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        .coach-title { font-weight: 800; text-transform: uppercase; font-size: 0.7rem; opacity: 0.8; margin-bottom: 0.25rem; }
-        .coach-message { font-weight: 600; font-size: 0.95rem; line-height: 1.4; }
-
-        .button-style { transition: all 0.1s ease-out; transform: translateY(0); }
-        .button-style:not(:disabled):active { transform: translateY(1px); }
+        .btn-main:disabled { opacity: 0.5; background-color: #555; }
         
-        .icon-btn {
-            padding: 0.5rem; border-radius: 9999px; color: var(--color-text-primary);
-            transition: opacity 0.2s, background-color 0.2s;
-            width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center;
+        .select-ui {
+            width: 100%; background-color: var(--bg-body); color: var(--text-main);
+            padding: 10px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.3);
+            margin-bottom: 10px; font-size: 1rem;
         }
-        .icon-btn:hover { opacity: 0.75; background-color: var(--color-input-bg); }
 
-        /* UPLOAD UI */
-        #upload-ui {
-            text-align: center; padding: 1.5rem; border: 2px dashed var(--color-border);
-            border-radius: 1rem; background-color: var(--color-upload-bg); 
-            transition: border-color 0.3s, background-color 0.3s;
+        /* --- LOADER & OVERLAYS --- */
+        #loader-container, #transition-overlay, #diapo-placeholder, #diapo-error {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 20; text-align: center;
         }
-        #upload-ui:hover { border-color: var(--color-accent-blue); }
-        .btn-upload {
-            background-color: var(--color-accent-blue); color: white; font-weight: bold;
-            padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; 
-            display: inline-flex; align-items: center; gap: 0.5rem; transition: opacity 0.2s;
-            font-size: 0.9rem;
-        }
-        .btn-upload:hover { opacity: 0.9; }
+        #loader-container, #transition-overlay, #diapo-error { display: none; background-color: var(--bg-container); }
+        #diapo-placeholder { background-color: var(--bg-display); z-index: 10; }
 
-        /* LOADER */
-        #loader-container { 
-            display: none; width: 80%; max-width: 400px; text-align: center; 
-            position: absolute; z-index: 20;
-        }
-        .progress-bar-bg {
-            width: 100%; height: 8px; background-color: var(--color-input-bg);
-            border: 1px solid var(--color-border); border-radius: 5px; margin-top: 10px; overflow: hidden;
-        }
-        .progress-bar-fill { height: 100%; width: 0%; background-color: var(--color-accent-blue); transition: width 0.2s ease-out; }
+        .progress-bar { width: 60%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; }
         
-        .dot { width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-dot-inactive); transition: background-color 0.3s; }
-        .dot.active { background-color: var(--color-dot-active); transform: scale(1.2); }
-        #progress-indicator { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 6px; }
+        /* --- TOUCH ZONES (Invisible navigation) --- */
+        .touch-zone { position: absolute; top: 0; height: 100%; width: 20%; z-index: 40; }
+        #zone-left { left: 0; }
+        #zone-right { right: 0; }
 
-        .img-flipped { transform: scaleX(-1); }
-        
-        #diapo-error { display: none; text-align: center; color: var(--color-rest-text); padding: 2rem; position: absolute; z-index: 20; }
-        .confetti-dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; }
-        #finish-animation-container { position: absolute; top: 0; bottom: 0; left: 0; right: 0; pointer-events: none; z-index: 50; overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <header class="global-header">
-        <h1 class="app-title">
-            Session Dessin
-        </h1>
-    </header>
-
     <div class="app-layout">
         
-        <div class="display-area" id="display-area-container">
+        <div class="display-area" id="display-area">
             
-            <div id="diapo-placeholder">
-                <div id="upload-ui">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-text-secondary); margin: 0 auto 0.5rem auto;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                    <h3 style="color: var(--color-text-primary); font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Références</h3>
-                    <button id="btn-select-folder" class="btn-upload" style="margin-top: 0.5rem;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                        Dossier
-                    </button>
-                    <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
-                    <p id="folder-status" style="color: var(--color-accent-blue); margin-top: 0.5rem; font-weight: bold; font-size: 0.8rem; min-height: 1.2rem;"></p>
-                </div>
+            <button id="btn-expand" onclick="toggleFullscreen()">
+                <svg id="icon-expand" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                <svg id="icon-compress" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
+            </button>
+
+            <div id="floating-hud">
+                <span id="float-timer" style="font-size: 1.5rem; font-weight: 800; color: #fff;">00:30</span>
+                <span id="float-counter" style="font-size: 0.8rem; color: #ddd;">1 / 30</span>
             </div>
 
-            <div id="loader-container">
-                <p style="color: var(--color-accent-blue); font-weight: bold; margin-bottom: 5px;">Chargement...</p>
-                <div class="progress-bar-bg"><div id="progress-bar-fill" class="progress-bar-fill"></div></div>
-                <p id="loader-text" style="color: var(--color-text-secondary); font-size: 0.8rem; margin-top: 5px;">0 / 0</p>
-            </div>
-
-            <div id="diapo-error">
-                <p class="font-bold">Erreur Image</p>
-            </div>
-
-            <div id="transition-overlay">
-                <svg class="transition-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <div class="transition-title" style="font-size: 1.25rem;">Changement !</div>
-                <div class="transition-subtitle" id="transition-text" style="font-size: 1rem;">...</div>
-            </div>
+            <div id="zone-left" class="touch-zone" title="Précédent / Pause"></div>
+            <div id="zone-right" class="touch-zone" title="Suivant"></div>
 
             <div id="transform-container">
-                <img id="diapo-image" src="" alt="Modèle">
+                <img id="diapo-image" src="" alt="">
             </div>
 
             <div id="image-toolbar">
-                <button class="tool-btn" id="btn-bw" title="Noir et Blanc">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                </button>
-                <div class="divider"></div>
-                <button class="tool-btn" id="btn-threshold" title="Seuil">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 2v20"/></svg>
-                </button>
-                <button class="tool-btn" id="btn-blur" title="Flou">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
-                </button>
-                <div class="divider"></div>
-                <button class="tool-btn" id="btn-flip" title="Miroir">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"></path><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"></path><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"></path></svg>
-                </button>
-                <button class="tool-btn" id="btn-rotate" title="Pivoter">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                </button>
+                <button class="tool-btn" id="btn-bw" title="Noir et Blanc"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></button>
+                <button class="tool-btn" id="btn-threshold" title="Seuil"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 2v20"/></svg></button>
+                <button class="tool-btn" id="btn-blur" title="Flou"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><line x1="2" y1="2" x2="22" y2="22"/></svg></button>
+                <div style="width:1px; height:20px; background:#666;"></div>
+                <button class="tool-btn" id="btn-flip" title="Miroir"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"></path><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"></path><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"></path></svg></button>
+                <button class="tool-btn" id="btn-rotate" title="Rotation"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
+            </div>
+
+            <div id="diapo-placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#666; margin-bottom:10px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <button id="btn-select-folder" class="btn-main" style="width:auto; padding: 10px 20px; font-size: 0.9rem;">Ouvrir Dossier</button>
+                <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+                <p id="folder-status" style="margin-top:10px; color:var(--accent); font-size:0.8rem; font-weight:bold;"></p>
+            </div>
+
+            <div id="loader-container">
+                <h3>Chargement...</h3>
+                <div class="progress-bar"><div id="progress-bar-fill" class="progress-fill"></div></div>
+                <p id="loader-text" style="font-size:0.8rem; margin-top:5px;">0/0</p>
+            </div>
+
+            <div id="transition-overlay">
+                <h2 class="transition-title" id="transition-text" style="font-size:2rem; font-family:'Kalam'; margin-bottom:10px;">...</h2>
+                <div style="font-size:3rem;">⏳</div>
+            </div>
+            
+             <div id="diapo-error">
+                <h3>Image Introuvable</h3>
             </div>
 
         </div>
 
         <div class="timer-area">
-            <div id="app" class="container">
-                <div id="finish-animation-container"></div>
+            <div class="container">
                 
-                <div class="main-content">
-                    <div class="flex justify-end items-center mb-4 gap-2">
-                        <button id="mute-toggle" class="icon-btn" aria-label="Mute">
-                            <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                            <svg id="sound-off-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v6a23 23 0 0 1-5-1.5"></path><path d="M11 5L6 9H2v6h4l5 4v-2.2"></path><path d="M9.15 14.85a10 10 0 0 1 0-5.7"></path></svg>
-                        </button>
-                        <button id="theme-toggle" class="icon-btn" aria-label="Thème">
-                            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        </button>
-                    </div>
-
-                    <div class="flex justify-between items-center mb-6 border-b pb-2 text-center" style="border-color: var(--color-border);">
-                        <div>
-                            <p class="text-xs" style="color: var(--color-text-secondary);">Pose</p>
-                            <span id="cycle-display" class="text-lg font-extrabold" style="color: var(--color-accent-blue);">01/30</span> 
-                        </div>
-                        <div>
-                            <p id="total-time-label" class="text-xs" style="color: var(--color-text-secondary);">Total</p> 
-                            <span id="total-time-display" class="text-lg font-extrabold" style="color: var(--color-dial-text);">30 min</span> 
-                        </div>
-                    </div>
-                    
-                    <div class="text-center relative"> 
-                        <p id="phase-display" class="font-bold" style="color: var(--color-text-secondary);">Prêt ?</p>
-                        <div id="seconds-display-box" class="mx-auto mt-2">
-                            <span id="seconds-display" class="font-extrabold">01:00</span> 
-                        </div>
-                    </div>
-
-                    <div id="coach-box">
-                        <div class="coach-title">💡 Conseil</div>
-                        <div id="coach-text" class="coach-message">Concentre-toi sur la ligne d'action.</div>
-                    </div>
-
-                    <div id="progress-indicator" class="mt-4 mb-4 rounded-lg border" style="background-color: var(--color-input-bg); border-color: var(--color-border);"></div>
-                    
-                    <div class="flex space-x-3 mb-4">
-                        <div class="flex-1">
-                            <p class="text-xs font-semibold mb-1 text-center" style="color: var(--color-text-secondary);">Durée</p>
-                            <select id="work-duration-selector" class="select-custom">
-                                <optgroup label="Modes Spéciaux">
-                                    <option value="CLASS_30">🎓 30 min</option>
-                                    <option value="CLASS_60">🎓 1h00</option>
-                                </optgroup>
-                                <optgroup label="Durée Fixe">
-                                    </optgroup>
-                            </select>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-xs font-semibold mb-1 text-center" style="color: var(--color-text-secondary);">Nb Poses</p>
-                            <select id="total-duration-selector" class="select-custom"></select>
-                        </div>
+                <div class="flex justify-between items-center mb-4">
+                    <h1 style="font-family: 'Kalam'; font-size: 1.5rem; color: var(--text-main);">Session Dessin</h1>
+                    <div class="flex gap-2">
+                        <button id="theme-toggle" class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
+                        <button id="mute-toggle" class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
                     </div>
                 </div>
 
-                <div class="flex justify-center space-x-3 flex-shrink-0 pt-2">
-                    <button id="main-action-button" class="button-style flex items-center justify-center flex-1 text-white font-bold p-3 rounded-lg hover:opacity-80 disabled:bg-gray-700 disabled:text-gray-500">
-                        <span id="main-btn-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                        </span>
-                    </button>
-                    <button id="next-button" disabled class="button-style flex items-center justify-center flex-1 text-white font-bold p-3 rounded-lg hover:opacity-80 disabled:bg-gray-700 disabled:text-gray-500" style="background-color: var(--color-next-bg);">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
-                    </button>
-                    <button id="stop-button" disabled class="button-style flex items-center justify-center flex-1 text-white font-bold p-3 rounded-lg hover:opacity-80 disabled:bg-gray-700 disabled:text-gray-500">
-                        <span id="stop-icon-container">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect></svg>
-                        </span>
-                    </button>
+                <div class="grid grid-cols-2 gap-4 text-center mb-4">
+                    <div>
+                        <p style="font-size:0.8rem; opacity:0.7;">Pose</p>
+                        <p id="cycle-display" style="font-weight:bold; font-size:1.2rem; color:var(--accent);">01 / 30</p>
+                    </div>
+                    <div>
+                        <p style="font-size:0.8rem; opacity:0.7;">Total</p>
+                        <p id="total-time-display" style="font-weight:bold; font-size:1.2rem;">30m</p>
+                    </div>
                 </div>
-            </div> 
+
+                <div class="text-center mb-4">
+                    <p id="phase-display" style="font-size:0.9rem; font-weight:bold; color:var(--accent); margin-bottom:5px;">Prêt ?</p>
+                    <div style="background:var(--bg-body); padding:10px; border-radius:12px; display:inline-block; min-width:180px;">
+                        <span id="seconds-display" class="big-timer">00:00</span>
+                    </div>
+                </div>
+
+                <div id="coach-box">
+                    <div class="coach-title">💡 CONSEIL</div>
+                    <div id="coach-text" class="coach-message">Charge tes images pour commencer.</div>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                    <select id="work-duration-selector" class="select-ui">
+                        <option value="CLASS_30">🎓 30 min (Cours)</option>
+                        <option value="CLASS_60">🎓 1h00 (Cours)</option>
+                        <option disabled>--- Fixe ---</option>
+                        <option value="30">30 sec</option>
+                        <option value="60">1 min</option>
+                        <option value="120">2 min</option>
+                        <option value="300">5 min</option>
+                        <option value="600">10 min</option>
+                    </select>
+                    <select id="total-duration-selector" class="select-ui" disabled>
+                        <option value="30">30 Poses</option>
+                        </select>
+                </div>
+
+                <button id="main-action-button" class="btn-main" disabled>
+                    <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>COMMENCER</span>
+                </button>
+                 <button id="stop-button" class="btn-main" style="background-color:#444; margin-top:5px;" disabled>Arrêter</button>
+
+            </div>
         </div>
+
     </div>
 
     <script>
-        // SERVICE WORKER REGISTRATION
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Fail', err));
-        }
+        // --- PWA SETUP ---
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 
-        // --- LOGIQUE DE FICHIERS LOCAUX ---
-        let IMAGE_FILES = []; 
-        const btnSelectFolder = document.getElementById('btn-select-folder');
-        const folderInput = document.getElementById('folder-input');
-        const folderStatus = document.getElementById('folder-status');
-
-        btnSelectFolder.addEventListener('click', () => { folderInput.click(); });
-
-        folderInput.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            const imageFiles = files.filter(file => file.type.startsWith('image/'));
-
-            if (imageFiles.length > 0) {
-                IMAGE_FILES = imageFiles.map(file => URL.createObjectURL(file));
-                folderStatus.textContent = `✅ ${IMAGE_FILES.length} images !`;
-                folderStatus.style.color = "var(--color-success-bg)";
-            } else {
-                folderStatus.textContent = "❌ Aucune image.";
-                folderStatus.style.color = "var(--color-rest-text)";
-                IMAGE_FILES = [];
-            }
-        });
-
-        // --- CONSTANTES ---
-        const SVG_PLAY = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
-        const SVG_PAUSE = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
-
-        const CLASS_30_STRUCTURE = [ ...Array(22).fill(30), ...Array(7).fill(120), 300 ];
-        const CLASS_60_STRUCTURE = [ ...Array(22).fill(30), ...Array(22).fill(120), 300 ];
+        // --- DATA & CONFIG ---
+        const CLASS_30 = [ ...Array(22).fill(30), ...Array(7).fill(120), 300 ];
+        const CLASS_60 = [ ...Array(22).fill(30), ...Array(22).fill(120), 300 ];
         
-        let currentClassStructure = [];
-        let isClassMode = false;
-        let TOTAL_CYCLES = 30; 
-        let WORK_DURATION = 60; 
-        const WORK_COUNTDOWN_SECONDS = 5; 
-
-        let currentCycle = 1; 
-        let currentSecondsInPhase = WORK_DURATION;
-        let totalRemainingSeconds = 0; 
+        let state = {
+            running: false, paused: false, transitioning: false, muted: false, light: false, fullscreen: false,
+            cycle: 1, timeLeft: 0, totalLeft: 0, mode: 'CLASS_30', customTotal: 30,
+            structure: [], playlist: [], images: [],
+            img: { scale:1, x:0, y:0, flip:false, bw:true, thresh:false, blur:false, rot:0 }
+        };
         let timerId = null;
-        let isRunning = false;
-        let isPaused = false; 
-        let isMuted = false; 
-        let isTransitioning = false; 
-        let sessionPlaylist = []; 
 
-        const mainActionButton = document.getElementById('main-action-button');
-        const mainBtnIcon = document.getElementById('main-btn-icon');
-        const nextButton = document.getElementById('next-button');
-        const stopButton = document.getElementById('stop-button');
-        const cycleDisplay = document.getElementById('cycle-display');
-        const secondsDisplay = document.getElementById('seconds-display');
-        const phaseDisplay = document.getElementById('phase-display');
-        const progressIndicator = document.getElementById('progress-indicator');
-        const totalTimeDisplay = document.getElementById('total-time-display');
-        const coachBox = document.getElementById('coach-box');
-        const coachText = document.getElementById('coach-text');
-        const workDurationSelector = document.getElementById('work-duration-selector'); 
-        const totalDurationSelector = document.getElementById('total-duration-selector'); 
-        const displayAreaContainer = document.getElementById('display-area-container');
-        const transformContainer = document.getElementById('transform-container');
-        const diapoImage = document.getElementById('diapo-image');
-        const transitionOverlay = document.getElementById('transition-overlay');
-        const transitionText = document.getElementById('transition-text');
-        const imageToolbar = document.getElementById('image-toolbar');
-        const diapoPlaceholder = document.getElementById('diapo-placeholder');
-        const diapoError = document.getElementById('diapo-error');
-        const loaderContainer = document.getElementById('loader-container');
-        const progressBarFill = document.getElementById('progress-bar-fill');
-        const loaderText = document.getElementById('loader-text');
+        // --- DOM ELEMENTS ---
+        const $ = (id) => document.getElementById(id);
+        const els = {
+            body: document.body,
+            img: $('diapo-image'), container: $('transform-container'), 
+            display: $('display-area'), toolbar: $('image-toolbar'),
+            btnExpand: $('btn-expand'), iconExpand: $('icon-expand'), iconCompress: $('icon-compress'),
+            timerMain: $('seconds-display'), timerFloat: $('float-timer'), 
+            phase: $('phase-display'), cycle: $('cycle-display'), total: $('total-time-display'),
+            counterFloat: $('float-counter'),
+            btnMain: $('main-action-button'), btnStop: $('stop-button'), btnMainText: $('main-action-button').querySelector('span'),
+            coach: $('coach-box'), coachTxt: $('coach-text'),
+            transOver: $('transition-overlay'), transTxt: $('transition-text'),
+            loader: $('loader-container'), bar: $('progress-bar-fill'), loadTxt: $('loader-text'),
+            selMode: $('work-duration-selector'), selTotal: $('total-duration-selector'),
+            placeholder: $('diapo-placeholder'), err: $('diapo-error'),
+            folderStatus: $('folder-status')
+        };
 
-        const btnBw = document.getElementById('btn-bw');
-        const btnThreshold = document.getElementById('btn-threshold');
-        const btnBlur = document.getElementById('btn-blur');
-        const btnFlip = document.getElementById('btn-flip');
-        const btnRotate = document.getElementById('btn-rotate');
-
-        const themeToggle = document.getElementById('theme-toggle');
-        const muteToggle = document.getElementById('mute-toggle');
-        const soundOnIcon = document.getElementById('sound-on-icon');
-        const soundOffIcon = document.getElementById('sound-off-icon');
-        const sunIcon = document.getElementById('sun-icon');
-        const moonIcon = document.getElementById('moon-icon');
-        let isLightMode = false;
-
-        let imgState = { scale: 1, pX: 0, pY: 0, rotation: 0, flip: false, bw: true, threshold: false, blur: false };
-        let isDragging = false;
-        let startX, startY;
-
-        function applyImageStyles() {
-            let filterStr = "";
-            if (imgState.threshold) filterStr += "grayscale(100%) contrast(300%) brightness(1.1) ";
-            else if (imgState.bw) filterStr += "grayscale(100%) ";
-            if (imgState.blur) filterStr += "blur(4px) ";
-            diapoImage.style.filter = filterStr;
-            diapoImage.style.transform = `rotate(${imgState.rotation}deg) scaleX(${imgState.flip ? -1 : 1})`;
-            transformContainer.style.transform = `translate(${imgState.pX}px, ${imgState.pY}px) scale(${imgState.scale})`;
-            btnBw.classList.toggle('active', imgState.bw && !imgState.threshold);
-            btnThreshold.classList.toggle('active', imgState.threshold);
-            btnBlur.classList.toggle('active', imgState.blur);
-            btnFlip.classList.toggle('active', imgState.flip);
-        }
-
-        function resetImageState() {
-            imgState.scale = 1; imgState.pX = 0; imgState.pY = 0; imgState.rotation = 0; imgState.flip = false; 
-            imgState.bw = true; imgState.threshold = false; imgState.blur = false;
-            applyImageStyles();
-        }
-
-        btnBw.addEventListener('click', () => { imgState.bw = !imgState.bw; if(imgState.threshold && imgState.bw) imgState.threshold = false; applyImageStyles(); });
-        btnThreshold.addEventListener('click', () => { imgState.threshold = !imgState.threshold; applyImageStyles(); });
-        btnBlur.addEventListener('click', () => { imgState.blur = !imgState.blur; applyImageStyles(); });
-        btnFlip.addEventListener('click', () => { imgState.flip = !imgState.flip; applyImageStyles(); });
-        btnRotate.addEventListener('click', () => { imgState.rotation = (imgState.rotation + 90) % 360; applyImageStyles(); });
-        window.addEventListener('keydown', (e) => {
-            if (!isRunning || isTransitioning) return;
-            const k = e.key.toLowerCase();
-            if (k === 'r') { imgState.scale=1; imgState.pX=0; imgState.pY=0; imgState.rotation=0; applyImageStyles(); }
-            if (k === 'b') { imgState.bw = !imgState.bw; applyImageStyles(); }
-            if (k === 'h') { imgState.flip = !imgState.flip; applyImageStyles(); }
-        });
-
-        displayAreaContainer.addEventListener('wheel', (e) => {
-            if (!isRunning || isTransitioning) return;
-            e.preventDefault();
-            const delta = -Math.sign(e.deltaY);
-            const factor = 1.1;
-            if (delta > 0) imgState.scale *= factor; else imgState.scale /= factor;
-            imgState.scale = Math.min(Math.max(0.05, imgState.scale), 20);
-            applyImageStyles();
-        });
-        displayAreaContainer.addEventListener('mousedown', (e) => {
-            if (!isRunning || isTransitioning || e.target.closest('#image-toolbar')) return;
-            isDragging = true;
-            startX = e.clientX - imgState.pX;
-            startY = e.clientY - imgState.pY;
-            displayAreaContainer.style.cursor = 'grabbing';
-        });
-        window.addEventListener('mouseup', () => { isDragging = false; displayAreaContainer.style.cursor = 'grab'; });
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            imgState.pX = e.clientX - startX; imgState.pY = e.clientY - startY;
-            applyImageStyles();
-        });
-
-        function updateMainButtonUI() {
-            if (!isRunning) {
-                mainBtnIcon.innerHTML = SVG_PLAY; mainActionButton.style.backgroundColor = 'var(--color-success-bg)';
-            } else if (isPaused) {
-                mainBtnIcon.innerHTML = SVG_PLAY; mainActionButton.style.backgroundColor = 'var(--color-resume-bg)';
-            } else {
-                mainBtnIcon.innerHTML = SVG_PAUSE; mainActionButton.style.backgroundColor = 'var(--color-pause-bg)';
-            }
-        }
-
-        function handleMainButtonClick() { if (!isRunning) startClickAction(); else togglePause(); }
-
-        function handleNextButtonClick() {
-            if (!isRunning || isTransitioning) return;
-            if (totalRemainingSeconds >= currentSecondsInPhase) totalRemainingSeconds -= currentSecondsInPhase;
-            else totalRemainingSeconds = 0;
-            updateTotalTimerDisplay(); completeCurrentPose(); updateDisplay();
-        }
-        
-        function togglePause() {
-            if (!isRunning) return;
-            if (isPaused) startTimerLogic();
-            else { if (timerId) clearInterval(timerId); isPaused = true; updateMainButtonUI(); }
-        }
-
-        function prepareSession() {
-            if (IMAGE_FILES.length === 0) { alert("Veuillez d'abord sélectionner un dossier !"); return; }
-            mainActionButton.disabled = true; btnSelectFolder.disabled = true; 
-            workDurationSelector.disabled = true; totalDurationSelector.disabled = true;
-            
-            sessionPlaylist = [];
-            let drawPile = [...IMAGE_FILES];
-            const shuffle = (array) => { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } };
-            shuffle(drawPile);
-
-            const countNeeded = isClassMode ? currentClassStructure.length : TOTAL_CYCLES;
-            for (let i = 0; i < countNeeded; i++) {
-                if (drawPile.length === 0) {
-                    drawPile = [...IMAGE_FILES]; shuffle(drawPile);
-                    if (IMAGE_FILES.length > 1 && sessionPlaylist.length > 0 && drawPile[0] === sessionPlaylist[sessionPlaylist.length - 1]) drawPile.push(drawPile.shift());
-                }
-                sessionPlaylist.push(drawPile.shift());
-            }
-            
-            diapoPlaceholder.style.display = 'none'; diapoImage.style.display = 'none'; diapoError.style.display = 'none';
-            loaderContainer.style.display = 'block';
-            let loadedCount = 0; const totalToLoad = sessionPlaylist.length;
-            if (totalToLoad === 0) { onSessionReady(); return; }
-            updateLoader(0, totalToLoad);
-            sessionPlaylist.forEach(path => {
-                const img = new Image(); img.src = path;
-                const onComplete = () => { loadedCount++; updateLoader(loadedCount, totalToLoad); if (loadedCount === totalToLoad) setTimeout(onSessionReady, 500); };
-                img.onload = onComplete; img.onerror = onComplete; 
-            });
-        }
-
-        function updateLoader(current, total) {
-            const percentage = Math.round((current / total) * 100);
-            progressBarFill.style.width = `${percentage}%`; loaderText.textContent = `${current} / ${total}`;
-        }
-
-        function onSessionReady() { loaderContainer.style.display = 'none'; startTimerLogic(); }
-
-        function applyCoachAndFilters(durationSeconds) {
-            coachBox.style.display = 'block';
-            if (durationSeconds <= 45) {
-                coachText.textContent = "⚡ GESTUELLE : Capture l'énergie !";
-            } else if (durationSeconds <= 150) { 
-                coachText.textContent = "🧱 VOLUMES : Masses et silhouette.";
-            } else if (durationSeconds <= 330) {
-                coachText.textContent = "🏗️ CONSTRUCTION : Structure et ombres.";
-            } else {
-                coachText.textContent = "🎨 DÉTAILS : Rendu et lumière.";
-            }
-        }
-
-        function showImageForCycle(cycleIndex) {
-            const arrayIndex = cycleIndex - 1;
-            if (arrayIndex >= sessionPlaylist.length) return;
-            const imagePath = sessionPlaylist[arrayIndex];
-            diapoImage.src = imagePath;
-            diapoImage.style.display = 'block';
-            imageToolbar.style.display = 'flex'; 
-            resetImageState(); 
-            const currentDuration = isClassMode ? currentClassStructure[cycleIndex-1] : WORK_DURATION;
-            applyCoachAndFilters(currentDuration);
-            diapoImage.onerror = function() { diapoImage.style.display = 'none'; diapoError.style.display = 'block'; };
-        }
-        
-        function resetImageDisplay() {
-            diapoImage.onerror = null; diapoImage.style.display = 'none'; imageToolbar.style.display = 'none';
-            diapoError.style.display = 'none'; loaderContainer.style.display = 'none'; diapoImage.src = ""; 
-            diapoPlaceholder.style.display = 'flex'; coachBox.style.display = 'none'; 
-            transitionOverlay.style.display = 'none';
-            resetImageState();
-        }
-
-        let gongSynth, tickSynth, startSynth, finishSynth, minuteSynth;
-        async function initializeAudio() {
+        // --- AUDIO ---
+        let sounds = {};
+        async function initAudio() {
             if (Tone.context.state !== 'running') await Tone.start();
-            gongSynth = new Tone.MetalSynth({ frequency: 200, envelope: { attack: 0.001, decay: 1.0, sustain: 0.05, release: 0.5 }, harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5 }).toDestination();
-            tickSynth = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.1 } }).toDestination();
-            startSynth = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.05, decay: 0.2, sustain: 0, release: 0.5 } }).toDestination();
-            finishSynth = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.02, decay: 0.5, sustain: 0, release: 1.0 } }).toDestination();
-            minuteSynth = new Tone.Synth({ volume: -8, oscillator: { type: "square" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.2 } }).toDestination();
+            sounds.gong = new Tone.MetalSynth({ frequency: 200, envelope: { attack: 0.001, decay: 1.0, release: 0.5 }, harmonicity: 5.1, resonance: 4000 }).toDestination();
+            sounds.tick = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.005, decay: 0.05, release: 0.1 } }).toDestination();
+            sounds.start = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.05, decay: 0.2, release: 0.5 } }).toDestination();
+            sounds.finish = new Tone.Synth({ oscillator: { type: "triangle" } }).toDestination();
+            sounds.trans = new Tone.Synth({ oscillator: { type: "triangle" } }).toDestination();
         }
+        const play = (s) => { if(!state.muted && sounds[s]) { 
+            if(s==='gong') sounds.gong.triggerAttackRelease("C4", "0.5");
+            if(s==='tick') sounds.tick.triggerAttackRelease("A4", "0.05");
+            if(s==='start') sounds.start.triggerAttackRelease("E6", "0.3");
+            if(s==='finish') sounds.finish.triggerAttackRelease("G5", "1.5");
+            if(s==='trans') sounds.trans.triggerAttackRelease("C6", "0.8");
+        }};
 
-        function playGongSound() { if(!isMuted) gongSynth.triggerAttackRelease("C4", "0.5"); }
-        function playStartSound() { if(!isMuted) startSynth.triggerAttackRelease("E6", "0.3"); }
-        function playTickSound() { if(!isMuted) tickSynth.triggerAttackRelease("A4", "0.05"); }
-        function playMinuteTick() { if(!isMuted) minuteSynth.triggerAttackRelease("A3", "0.1"); }
-        function playFinishSound() { if(!isMuted) { const now = Tone.now(); finishSynth.triggerRelease(now); finishSynth.triggerAttackRelease("G5", "1.5", now + 0.05); } }
-        function playTransitionSound() { if(!isMuted) { finishSynth.triggerAttackRelease("C6", "0.8"); } }
-
-        function runMinuteCycle() {
-            if (isPaused || isTransitioning) return; 
-            currentSecondsInPhase--;
-            if (totalRemainingSeconds > 0) { totalRemainingSeconds--; updateTotalTimerDisplay(); }
-
-            const durationRef = isClassMode ? currentClassStructure[currentCycle-1] : WORK_DURATION;
-            if (durationRef > 60 && currentSecondsInPhase > 0 && currentSecondsInPhase % 60 === 0) playMinuteTick();
-            if (currentSecondsInPhase <= WORK_COUNTDOWN_SECONDS && currentSecondsInPhase > 0) playTickSound(); 
-            if (currentSecondsInPhase === 0) completeCurrentPose();
-            updateDisplay();
-        }
-
-        function completeCurrentPose() {
-            const maxCycles = isClassMode ? currentClassStructure.length : TOTAL_CYCLES;
-            if (isClassMode && currentCycle < maxCycles) {
-                const nextDuration = currentClassStructure[currentCycle]; 
-                const currentDuration = currentClassStructure[currentCycle - 1];
-                if (nextDuration !== currentDuration) {
-                    triggerTransition(nextDuration);
-                    return;
-                }
-            }
-            const isFinalCycle = (currentCycle >= maxCycles);
-            if (isFinalCycle) { clearInterval(timerId); timerId = null; isRunning = false; handleTimerFinished(); return; }
-            else {
-                playGongSound(); currentCycle++;
-                if (isClassMode) currentSecondsInPhase = currentClassStructure[currentCycle - 1]; else currentSecondsInPhase = WORK_DURATION;
-                showImageForCycle(currentCycle); 
-            }
-        }
-        
-        function triggerTransition(nextDuration) {
-            isTransitioning = true;
-            playTransitionSound();
-            diapoImage.style.display = 'none'; imageToolbar.style.display = 'none'; coachBox.style.display = 'none';
-            let durationText = nextDuration >= 60 ? `${Math.floor(nextDuration/60)} min` : `${nextDuration} sec`;
+        // --- LOGIC ---
+        function calcStructure() {
+            if (state.mode === 'CLASS_30') state.structure = CLASS_30;
+            else if (state.mode === 'CLASS_60') state.structure = CLASS_60;
+            else state.structure = Array(state.customTotal).fill(parseInt(state.mode));
             
-            if (nextDuration === 300) transitionText.textContent = `Dernière ligne droite ! Pose de ${durationText}`;
-            else transitionText.textContent = `Prochaines poses : ${durationText}`;
+            state.totalLeft = state.structure.reduce((a,b)=>a+b, 0);
+            updateInfoUI();
+        }
+
+        function updateInfoUI() {
+            const max = state.structure.length;
+            const h = Math.floor(state.totalLeft/3600);
+            const m = Math.floor((state.totalLeft%3600)/60);
+            const txt = (h>0?h+'h':'') + (m>0?m+'m':'') + (state.totalLeft<60 ? state.totalLeft+'s' : '');
+            els.total.textContent = txt || '0m';
+            els.cycle.textContent = `${String(state.cycle).padStart(2,'0')} / ${max}`;
+            els.counterFloat.textContent = `${state.cycle} / ${max}`;
+        }
+
+        function formatTime(s) {
+            const m = Math.floor(s/60); const sc = s%60;
+            return `${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+        }
+
+        function showImage(idx) {
+            // Reset transforms
+            state.img = { scale:1, x:0, y:0, flip:false, bw:true, thresh:false, blur:false, rot:0 };
+            updateImgCSS();
+
+            const src = state.playlist[idx];
+            if(src) {
+                els.img.src = src; els.img.style.display = 'block'; els.err.style.display = 'none';
+                els.toolbar.style.display = 'flex'; els.btnExpand.style.display = 'block';
+                // Coach
+                const d = state.structure[idx];
+                els.coach.style.display = 'block';
+                if(d<=45) els.coachTxt.textContent = "⚡ GESTUELLE : Mouvement et énergie !";
+                else if(d<=150) els.coachTxt.textContent = "🧱 VOLUMES : Masses et silhouette.";
+                else if(d<=330) els.coachTxt.textContent = "🏗️ CONSTRUCTION : Structure et ombres.";
+                else els.coachTxt.textContent = "🎨 DÉTAILS : Rendu et finitions.";
+            } else {
+               els.img.style.display = 'none'; els.err.style.display = 'flex';
+            }
+        }
+
+        function updateTimerUI() {
+            const t = formatTime(state.timeLeft);
+            els.timerMain.textContent = t;
+            els.timerFloat.textContent = t;
+            if(state.timeLeft <= 5 && state.timeLeft > 0) play('tick');
+        }
+
+        function tick() {
+            if(state.paused || state.transitioning) return;
+            state.timeLeft--;
+            if(state.totalLeft > 0) state.totalLeft--;
+            updateTimerUI();
+            updateInfoUI();
+
+            if(state.timeLeft <= 0) {
+                nextPose();
+            }
+        }
+
+        function nextPose() {
+            // Check transition
+            const currentDur = state.structure[state.cycle-1];
+            const nextDur = state.structure[state.cycle]; // cycle is 1-based index for display, so index in array is cycle
+            const isLast = state.cycle >= state.structure.length;
+
+            if(!isLast && nextDur !== currentDur && (state.mode.startsWith('CLASS'))) {
+                 doTransition(nextDur);
+                 return;
+            }
+
+            if(isLast) {
+                endSession();
+            } else {
+                play('gong');
+                state.cycle++;
+                state.timeLeft = state.structure[state.cycle-1];
+                showImage(state.cycle-1);
+                updateInfoUI();
+            }
+        }
+
+        function doTransition(duration) {
+            state.transitioning = true;
+            play('trans');
+            els.img.style.display = 'none'; els.toolbar.style.display = 'none'; els.coach.style.display = 'none';
+            els.transOver.style.display = 'flex';
+            const min = Math.floor(duration/60);
+            els.transTxt.textContent = (duration===300) ? `Dernière Pose : ${min} min` : `Prochaines : ${duration>=60?min+' min':duration+' s'}`;
             
-            transitionOverlay.style.display = 'flex';
             setTimeout(() => {
-                isTransitioning = false; transitionOverlay.style.display = 'none';
-                currentCycle++;
-                if (isClassMode) currentSecondsInPhase = currentClassStructure[currentCycle - 1];
-                playStartSound(); showImageForCycle(currentCycle); updateDisplay();
+                state.transitioning = false;
+                els.transOver.style.display = 'none';
+                state.cycle++;
+                state.timeLeft = state.structure[state.cycle-1];
+                play('start');
+                showImage(state.cycle-1);
+                updateInfoUI();
             }, 5000);
         }
 
-        async function startClickAction() { if (isRunning && !isPaused) return; await initializeAudio(); prepareSession(); }
+        function startSession() {
+            state.running = true; state.paused = false;
+            els.btnMain.style.background = 'var(--accent)';
+            els.btnMainText.textContent = "PAUSE";
+            els.btnStop.disabled = false; els.placeholder.style.display = 'none';
+            els.selMode.disabled = true; els.selTotal.disabled = true;
+            
+            // Prepare playlist
+            state.playlist = [];
+            let pile = [...state.images];
+            // Simple shuffle
+            for (let i = pile.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pile[i], pile[j]] = [pile[j], pile[i]]; }
+            
+            for(let i=0; i<state.structure.length; i++) {
+                if(pile.length===0) pile = [...state.images].sort(()=>Math.random()-0.5);
+                state.playlist.push(pile.pop());
+            }
 
-        function startTimerLogic() {
-            isRunning = true; isPaused = false; isTransitioning = false;
-            mainActionButton.disabled = false; stopButton.disabled = false; nextButton.disabled = false;
-            document.getElementById('finish-animation-container').innerHTML = ''; phaseDisplay.textContent = "Pose en cours";
-            if (timerId === null) {
-                currentCycle = 1;
-                if (isClassMode) currentSecondsInPhase = currentClassStructure[0]; else currentSecondsInPhase = WORK_DURATION;
-                calculateTotalTime(); updateDisplay(); showImageForCycle(1); playStartSound(); 
-                timerId = setInterval(runMinuteCycle, 1000);
-            } else { timerId = setInterval(runMinuteCycle, 1000); }
-        }
-
-        function stopTimer() {
-            if (timerId) { clearInterval(timerId); timerId = null; }
-            isRunning = false; isPaused = false; isTransitioning = false;
-            mainActionButton.disabled = false; stopButton.disabled = true; nextButton.disabled = true;
-            btnSelectFolder.disabled = false; workDurationSelector.disabled = false; 
-            if(!isClassMode) totalDurationSelector.disabled = false;
-            resetImageDisplay(); resetDisplayToDefault();
-        }
-
-        function formatSeconds(s) { const m = Math.floor(s / 60); const sc = s % 60; return `${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`; }
-        function updateTotalTimerDisplay() {
-            const h = Math.floor(totalRemainingSeconds / 3600); const m = Math.floor((totalRemainingSeconds % 3600) / 60); const s = totalRemainingSeconds % 60;
-            let parts = []; if(h>0) parts.push(`${h}h`); if(m>0||h>0) parts.push(`${String(m).padStart(2,'0')}m`); parts.push(`${String(s).padStart(2,'0')}s`);
-            totalTimeDisplay.textContent = parts.join(' ');
-        }
-        function calculateTotalTime() {
-            if (isClassMode) totalRemainingSeconds = currentClassStructure.reduce((a, b) => a + b, 0); else totalRemainingSeconds = TOTAL_CYCLES * WORK_DURATION;
-            updateTotalTimerDisplay(); generateProgressDots(); updateDisplay();
-        }
-        function updateDisplay() {
-            const max = isClassMode ? currentClassStructure.length : TOTAL_CYCLES;
-            cycleDisplay.textContent = `${String(currentCycle).padStart(2,'0')} / ${max}`;
-            secondsDisplay.textContent = formatSeconds(currentSecondsInPhase);
-            updateProgressIndicator(); updateMainButtonUI();
-        }
-        function generateProgressDots() {
-            progressIndicator.innerHTML = ''; const max = isClassMode ? currentClassStructure.length : TOTAL_CYCLES; const lim = Math.min(max, 100); 
-            for (let i=0; i<lim; i++) { const d = document.createElement('div'); d.className = 'dot'; progressIndicator.appendChild(d); }
-        }
-        function updateProgressIndicator() {
-            const dots = progressIndicator.children; const max = isClassMode ? currentClassStructure.length : TOTAL_CYCLES;
-            for (let i=0; i<Math.min(max, 100); i++) { if (i <= currentCycle - 1) dots[i].classList.add('active'); else dots[i].classList.remove('active'); }
-        }
-        function resetDisplayToDefault() {
-            currentCycle = 1; if(isClassMode) currentSecondsInPhase = currentClassStructure[0]; else currentSecondsInPhase = WORK_DURATION;
-            calculateTotalTime(); updateDisplay(); phaseDisplay.textContent = "Prêt ?";
-        }
-        function handleTimerFinished() {
-            if (timerId) clearInterval(timerId); timerId = null; isRunning = false; secondsDisplay.textContent = "--:--"; phaseDisplay.textContent = "Terminé !";
-            mainActionButton.disabled = true; stopButton.disabled = true; nextButton.disabled = true;
-            resetImageDisplay(); playFinishSound(); generateConfetti(); setTimeout(() => { resetDisplayToDefault(); stopTimer(); }, 2600);
+            // Preload logic could go here, simply showing first one for now
+            state.cycle = 1;
+            state.timeLeft = state.structure[0];
+            showImage(0);
+            play('start');
+            timerId = setInterval(tick, 1000);
         }
 
-        function savePrefs() {
-            const prefs = { muted: isMuted, lightMode: isLightMode, workDurationVal: workDurationSelector.value, totalCyclesVal: totalDurationSelector.value };
-            localStorage.setItem('sessionDessinPrefsV4', JSON.stringify(prefs));
-        }
-        function loadPrefs() {
-            const saved = localStorage.getItem('sessionDessinPrefsV4');
-            if (saved) {
-                const prefs = JSON.parse(saved);
-                if (prefs.muted) { isMuted = true; soundOnIcon.classList.add('hidden'); soundOffIcon.classList.remove('hidden'); muteToggle.style.color='var(--color-text-secondary)'; }
-                if (prefs.lightMode) { isLightMode = true; document.body.classList.add('light-mode'); moonIcon.classList.remove('hidden'); sunIcon.classList.add('hidden'); themeToggle.style.color = 'var(--color-text-primary)'; stopButton.style.backgroundColor = 'var(--color-stop-bg)'; }
-                if (prefs.workDurationVal) { workDurationSelector.value = prefs.workDurationVal; workDurationSelector.dispatchEvent(new Event('change')); }
-                if (prefs.totalCyclesVal && !workDurationSelector.value.startsWith('CLASS')) { totalDurationSelector.value = prefs.totalCyclesVal; TOTAL_CYCLES = parseInt(prefs.totalCyclesVal); }
+        function togglePause() {
+            if(!state.running) {
+                initAudio().then(startSession);
+                return;
+            }
+            state.paused = !state.paused;
+            if(state.paused) {
+                els.btnMain.style.background = '#e3b341'; els.btnMainText.textContent = "REPRENDRE";
+                els.phase.textContent = "PAUSE";
+            } else {
+                els.btnMain.style.background = 'var(--accent)'; els.btnMainText.textContent = "PAUSE";
+                els.phase.textContent = "En cours";
             }
         }
 
-        function initSelectors() {
-            const times = [{v:30,l:'30s'}, {v:45,l:'45s'}];
-            times.forEach(t => { let o = document.createElement('option'); o.value = t.v; o.textContent = t.l; workDurationSelector.appendChild(o); });
-            for(let i=60; i<=1800; i+=30) {
-                let o = document.createElement('option'); o.value = i; let min = Math.floor(i/60); let sec = i % 60;
-                let text = ""; if (sec === 0) { text = `${min} min`; if (i % 300 === 0) text = `— ${text} —`; } else { text = `${min} min 30`; }
-                o.textContent = text; if(i===60) o.selected=true; workDurationSelector.appendChild(o);
-            }
-            for(let i=1;i<=100;i++) {
-                let o = document.createElement('option'); o.value = i; let text = (i === 1) ? `1 Pose` : `${i} Poses`;
-                o.textContent = (i===1||i%5===0)?`— ${text} —`: text; if(i===30) o.selected=true; totalDurationSelector.appendChild(o);
+        function endSession() {
+            clearInterval(timerId); state.running = false;
+            play('finish');
+            els.phase.textContent = "Terminé !";
+            els.btnMain.textContent = "Terminé"; els.btnMain.disabled = true;
+            els.img.style.display = 'none'; els.toolbar.style.display = 'none';
+            // Reset visual after 3s
+            setTimeout(() => location.reload(), 3000);
+        }
+
+        // --- IMAGE MANIPULATION ---
+        function updateImgCSS() {
+            let f = "";
+            if(state.img.thresh) f += "grayscale(100%) contrast(300%) brightness(1.1) ";
+            else if(state.img.bw) f += "grayscale(100%) ";
+            if(state.img.blur) f += "blur(4px) ";
+            els.img.style.filter = f;
+            els.img.style.transform = `rotate(${state.img.rot}deg) scaleX(${state.img.flip?-1:1})`;
+            els.container.style.transform = `translate(${state.img.x}px, ${state.img.y}px) scale(${state.img.scale})`;
+            
+            // Buttons state
+            $('btn-bw').classList.toggle('active', state.img.bw && !state.img.thresh);
+            $('btn-threshold').classList.toggle('active', state.img.thresh);
+            $('btn-blur').classList.toggle('active', state.img.blur);
+            $('btn-flip').classList.toggle('active', state.img.flip);
+        }
+
+        function toggleFullscreen() {
+            state.fullscreen = !state.fullscreen;
+            if(state.fullscreen) {
+                els.body.classList.add('fullscreen-active');
+                els.iconExpand.style.display = 'none'; els.iconCompress.style.display = 'block';
+            } else {
+                els.body.classList.remove('fullscreen-active');
+                els.iconExpand.style.display = 'block'; els.iconCompress.style.display = 'none';
+                // Reset zoom on exit
+                state.img.scale = 1; state.img.x = 0; state.img.y = 0; updateImgCSS();
             }
         }
 
-        mainActionButton.addEventListener('click', handleMainButtonClick); nextButton.addEventListener('click', handleNextButtonClick); stopButton.addEventListener('click', stopTimer);
+        // --- EVENTS ---
         
-        muteToggle.addEventListener('click', () => { isMuted = !isMuted; if(isMuted) { soundOnIcon.classList.add('hidden'); soundOffIcon.classList.remove('hidden'); muteToggle.style.color='var(--color-text-secondary)'; } else { soundOnIcon.classList.remove('hidden'); soundOffIcon.classList.add('hidden'); muteToggle.style.color='var(--color-text-primary)'; } savePrefs(); });
-        themeToggle.addEventListener('click', () => { isLightMode = !isLightMode; if (isLightMode) { document.body.classList.add('light-mode'); moonIcon.classList.remove('hidden'); sunIcon.classList.add('hidden'); } else { document.body.classList.remove('light-mode'); moonIcon.classList.add('hidden'); sunIcon.classList.remove('hidden'); } themeToggle.style.color = 'var(--color-text-primary)'; stopButton.style.backgroundColor = 'var(--color-stop-bg)'; updateMainButtonUI(); savePrefs(); });
-        workDurationSelector.addEventListener('change', (e) => { const val = e.target.value; if (val === 'CLASS_30') { isClassMode = true; totalDurationSelector.disabled = true; currentClassStructure = CLASS_30_STRUCTURE; phaseDisplay.textContent = `Cours (30 min) : 30 Poses`; } else if (val === 'CLASS_60') { isClassMode = true; totalDurationSelector.disabled = true; currentClassStructure = CLASS_60_STRUCTURE; phaseDisplay.textContent = `Cours (1h00) : 45 Poses`; } else { isClassMode = false; totalDurationSelector.disabled = false; WORK_DURATION = parseInt(val); phaseDisplay.textContent = "Prêt ?"; } if (!isRunning) { if(isClassMode) currentSecondsInPhase = currentClassStructure[0]; else currentSecondsInPhase = WORK_DURATION; calculateTotalTime(); } savePrefs(); });
-        totalDurationSelector.addEventListener('change', (e) => { TOTAL_CYCLES = parseInt(e.target.value); if (!isRunning && !isClassMode) calculateTotalTime(); savePrefs(); });
+        // Folder
+        $('btn-select-folder').onclick = () => $('folder-input').click();
+        $('folder-input').onchange = (e) => {
+            const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+            if(files.length) {
+                state.images = files.map(f => URL.createObjectURL(f));
+                els.folderStatus.textContent = `${files.length} images chargées !`;
+                els.btnMain.disabled = false;
+            }
+        };
 
-        const C_COLORS = ['#58a6ff', '#f00', '#0f0', '#ff0', '#fff']; 
-        function generateConfetti() { const c = document.getElementById('finish-animation-container'); c.innerHTML=''; const rect = c.getBoundingClientRect(); const cx = rect.width/2; const cy = rect.height/2; for(let i=0;i<50;i++){ let d=document.createElement('div'); d.className='confetti-dot'; d.style.backgroundColor=C_COLORS[Math.floor(Math.random()*C_COLORS.length)]; let a=Math.random()*2*Math.PI; let dist=Math.max(rect.width,rect.height)*0.7*Math.random(); d.style.left=`${cx}px`; d.style.top=`${cy}px`; setTimeout(()=>{ d.style.transition='transform 2.5s ease-out, opacity 2.5s ease-out'; d.style.opacity=0; d.style.transform=`translate(-50%,-50%) translate(${Math.cos(a)*dist}px, ${Math.sin(a)*dist}px)`; },10); c.appendChild(d); } setTimeout(() => { c.innerHTML = ''; }, 2600); }
+        // Selectors
+        els.selMode.onchange = (e) => {
+            state.mode = e.target.value;
+            els.selTotal.disabled = state.mode.startsWith('CLASS');
+            calcStructure();
+        };
+        els.selTotal.onchange = (e) => {
+            state.customTotal = parseInt(e.target.value);
+            calcStructure();
+        };
 
-        window.onload = () => { initSelectors(); loadPrefs(); if (!isClassMode) { WORK_DURATION = 60; TOTAL_CYCLES = 30; } calculateTotalTime(); updateMainButtonUI(); };
+        // Buttons
+        els.btnMain.onclick = togglePause;
+        els.btnStop.onclick = () => location.reload();
+        
+        // Tool buttons
+        $('btn-bw').onclick = () => { state.img.bw = !state.img.bw; if(state.img.thresh) state.img.thresh = false; updateImgCSS(); };
+        $('btn-threshold').onclick = () => { state.img.thresh = !state.img.thresh; updateImgCSS(); };
+        $('btn-blur').onclick = () => { state.img.blur = !state.img.blur; updateImgCSS(); };
+        $('btn-flip').onclick = () => { state.img.flip = !state.img.flip; updateImgCSS(); };
+        $('btn-rotate').onclick = () => { state.img.rot = (state.img.rot+90)%360; updateImgCSS(); };
+
+        // --- TOUCH / MOUSE INTERACTION ---
+        
+        // Double Tap Zoom
+        let lastTap = 0;
+        els.display.addEventListener('touchend', (e) => {
+            const cTime = new Date().getTime();
+            const tapLen = cTime - lastTap;
+            if (tapLen < 300 && tapLen > 0) {
+                // Double Tap logic
+                if(state.img.scale > 1) { state.img.scale = 1; state.img.x = 0; state.img.y = 0; }
+                else { state.img.scale = 2.5; } // Zoom X2.5
+                updateImgCSS();
+                e.preventDefault();
+            }
+            lastTap = cTime;
+        });
+
+        // Navigation Zones (Left/Right)
+        $('zone-right').onclick = () => { if(state.running && !state.paused) { state.timeLeft = 0; tick(); } };
+        $('zone-left').onclick = () => { togglePause(); }; // Left tap pauses for now, safer
+
+        // INIT SELECTORS
+        for(let i=1; i<=50; i++) {
+            let o = document.createElement('option'); o.value=i; o.text=`${i} Poses`;
+            els.selTotal.appendChild(o);
+        }
+        els.selTotal.value = 30;
+        calcStructure(); // Init default
+
     </script>
 </body>
 </html>

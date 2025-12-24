@@ -1,4 +1,4 @@
-const CACHE_NAME = 'session-dessin-v4.2';
+const CACHE_NAME = 'session-dessin-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
